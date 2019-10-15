@@ -1,8 +1,6 @@
-![Darknet Logo](http://pjreddie.com/media/files/darknet-black-small.png)
-
-# Darknet #
+# Darknet + tracker #
 Darknet is an open source neural network framework written in C and CUDA. It is fast, easy to install, and supports CPU and GPU computation.
 
-For more information see the [Darknet project website](http://pjreddie.com/darknet).
+but it can't tracking the thing, which detected by yolo.
+so we add some tracker to this greate thing.
 
-For questions or issues please use the [Google Group](https://groups.google.com/forum/#!forum/darknet).
