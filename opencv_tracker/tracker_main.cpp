@@ -36,12 +36,12 @@ int main(int argc, char **argv)
 
     vector<vector<string>> file = read_txt("../out.txt");
     Mat frame = imread("../out.jpg", IMREAD_COLOR);
-    vector<thing_info> tmp_thing;
+    vector<thing_info> current_thing;
     get_frame_size(file);
 
-    tmp_thing = file_to_box(frame, file);
+    current_thing = file_to_box(frame, file);
     init_dot();
-    put_init_value_to_dot(tmp_thing);
+    put_init_value_to_dot(current_thing);
 
     while (1)
     {
@@ -60,9 +60,9 @@ int main(int argc, char **argv)
             if (frame.empty())
                 break;
 
-            tmp_thing = file_to_box(frame, file); //tmp_thing에는 욜로가 생성한 물체들에대한 정보가 임시로 저장 되어 있음
+            current_thing = file_to_box(frame, file); //current_thing에는 욜로가 생성한 물체들에대한 정보가 임시로 저장 되어 있음
 
-            bbox_tmp = watchdog(frame, tmp_thing);
+            bbox_tmp = watchdog(frame, current_thing);
 
             for (int i = 0; i < THING_NUM; i++)
             {
@@ -116,15 +116,15 @@ void init_dot()
     }
 }
 
-void put_init_value_to_dot(vector<thing_info> tmp_thing)
+void put_init_value_to_dot(vector<thing_info> current_thing)
 {
-    for (int i = 0; i < tmp_thing.size(); i++)
+    for (int i = 0; i < current_thing.size(); i++)
     {
-        trackers_dot[i].bbox = tmp_thing[i].bbox;
-        trackers_dot[i].p = cal_center_point(tmp_thing[i].bbox);
-        trackers_dot[i].name = tmp_thing[i].name;
+        trackers_dot[i].bbox = current_thing[i].bbox;
+        trackers_dot[i].p = cal_center_point(current_thing[i].bbox);
+        trackers_dot[i].name = current_thing[i].name;
         trackers_dot[i].tag = i;
-        trackers_dot[i].im = tmp_thing[i].im;
+        trackers_dot[i].im = current_thing[i].im;
     }
 }
 
@@ -467,34 +467,34 @@ int thing_exist(thing_info input) //존재하면 존재한 사물의 인덱스�
     return -1;
 }
 
-vector<Rect2d> watchdog(Mat frame, vector<thing_info> tmp_thing)
+vector<Rect2d> watchdog(Mat frame, vector<thing_info> current_thing)
 {
     float r_limit = 5.0;
     vector<Rect2d> result;
     Rect2d tmp_2d;
 
-    for (int i = 0; i < tmp_thing.size(); i++)
+    for (int i = 0; i < current_thing.size(); i++)
     {
-        int flag = thing_exist(tmp_thing[i]);
+        int flag = thing_exist(current_thing[i]);
         if (flag >= 0) //기존 물체라면 현배 버퍼의 같은 위치로 옮겨온다.
         {
             trackers_dot[flag].tag = flag;
-            trackers_dot[flag].im = tmp_thing[i].im;
-            trackers_dot[flag].bbox = tmp_thing[i].bbox;
-            trackers_dot[flag].name = tmp_thing[i].name;
-            trackers_dot[flag].p = cal_center_point(tmp_thing[i].bbox);
+            trackers_dot[flag].im = current_thing[i].im;
+            trackers_dot[flag].bbox = current_thing[i].bbox;
+            trackers_dot[flag].name = current_thing[i].name;
+            trackers_dot[flag].p = cal_center_point(current_thing[i].bbox);
             trackers_dot[flag].put_point_to_stack(trackers_dot[flag].p);
             trackers_dot[flag].is_missed = false;
         }
         else if (flag == -1)
         {
             int new_tag = get_empty_tag();
-            tmp_thing[i].tag = new_tag;
+            current_thing[i].tag = new_tag;
             trackers_dot[new_tag].tag = flag;
-            trackers_dot[new_tag].im = tmp_thing[i].im;
-            trackers_dot[new_tag].bbox = tmp_thing[i].bbox;
-            trackers_dot[new_tag].name = tmp_thing[i].name; //만약 새 물체라면 현재 버퍼의 새 위치로 옮겨온다.
-            trackers_dot[new_tag].p = cal_center_point(tmp_thing[i].bbox);
+            trackers_dot[new_tag].im = current_thing[i].im;
+            trackers_dot[new_tag].bbox = current_thing[i].bbox;
+            trackers_dot[new_tag].name = current_thing[i].name; //만약 새 물체라면 현재 버퍼의 새 위치로 옮겨온다.
+            trackers_dot[new_tag].p = cal_center_point(current_thing[i].bbox);
             trackers_dot[new_tag].put_point_to_stack(trackers_dot[new_tag].p);
             trackers_dot[new_tag].is_missed = false;
         }

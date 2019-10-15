@@ -10,7 +10,7 @@
             "name": "g++ build and debug active file",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/home/thsvkd/yoloTracker",
+            "program": "/home/thsvkd/yoloTracker/darknet",
             "args": [
                 "detector",
                 "demo",
