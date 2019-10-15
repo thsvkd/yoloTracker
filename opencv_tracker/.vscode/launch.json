@@ -8,14 +8,8 @@
             "name": "g++ build and debug active file",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/home/thsvkd/darknet/opencv_tracker/tracker",
-            "args": [
-                "detector",
-                "demo",
-                "cfg/coco.data",
-                "cfg/yolov2.cfg",
-                "yolo.weights"
-            ],
+            "program": "/home/thsvkd/yoloTracker/opencv_tracker/tracker",
+            "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

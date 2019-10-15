@@ -64,7 +64,7 @@ int main(int argc, char **argv)
 
             bbox_tmp = watchdog(frame, tmp_thing);
 
-            for (int i = 0; i < THING_NUM; i++) //****여기 꼭 고쳐라*****
+            for (int i = 0; i < THING_NUM; i++)
             {
                 int index = (thing_buf_index % 2) * THING_NUM + i;
                 char tmp[10];
