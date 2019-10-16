@@ -116,6 +116,7 @@ float tracking_dot::cal_distance_score(vector<thing_info> current_thing, int dis
     {
         for (int i = 0; i < index_list.size(); i++)
         {
+
             cout << "align_Images start" << endl;
             cout << trackers_dot[index_list[i]].im.cols << " " << input.im.cols << endl;
             score = align_Images(trackers_dot[index_list[i]].im, input.im);

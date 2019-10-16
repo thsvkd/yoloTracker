@@ -70,7 +70,7 @@ public:
     void goto_next_point();
     Point predict_next_point();
     float cal_distance_score(vector<thing_info> current_thing, int distance_limit);
-    float cal_matching_score(vector<thing_info> current_thing);
+    float cal_matching_score(vector<thing_info> current_thing, int score_limit);
     int get_dot_thing(vector<thing_info> current_thing);
 };
 
