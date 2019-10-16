@@ -98,7 +98,7 @@ Point tracking_dot::predict_next_point()
     return p + v;
 }
 
-float tracking_dot::cal_distance_score(vector<thing_info> current_thing, int distance_limit)
+int tracking_dot::which_thing_is_my_thing(vector<thing_info> current_thing, int distance_limit, int score_limit)
 {
     vector<float> dis_list;
     vector<int> index_list;
@@ -116,10 +116,9 @@ float tracking_dot::cal_distance_score(vector<thing_info> current_thing, int dis
     {
         for (int i = 0; i < index_list.size(); i++)
         {
-
             cout << "align_Images start" << endl;
-            cout << trackers_dot[index_list[i]].im.cols << " " << input.im.cols << endl;
-            score = align_Images(trackers_dot[index_list[i]].im, input.im);
+            //cout << current_thing[index_list[i]].im.cols << " " << input.im.cols << endl;
+            score = align_Images(current_thing[index_list[i]].im, im);
 
             if (score < score_limit && (score >= 0))
                 return index_list[i];
@@ -127,25 +126,15 @@ float tracking_dot::cal_distance_score(vector<thing_info> current_thing, int dis
     }
 }
 
-float tracking_dot::cal_matching_score(vector<thing_info> current_thing, int score_limit)
-{
-}
-
 int tracking_dot::get_dot_thing(vector<thing_info> current_thing)
 {
     float score_limit = 2.5;
     float distance_limit = 50;
 
-    if (cal_distance_score(current_thing, distance_limit) < 50)
+    if (which_thing_is_my_thing(current_thing, distance_limit, score_limit) != -1)
     {
     }
     else
     {
-        if (cal_matching_score(current_thing, score_limit) < score_limit)
-        {
-        }
-        else
-        {
-        }
     }
 }
