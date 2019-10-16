@@ -18,6 +18,8 @@
 #include <opencv2/tracking.hpp>
 #include <opencv2/core/ocl.hpp>
 #include <iostream>
+#include <cstdlib>
+#include <ctime>
 #include <sstream>
 #include <vector>
 #include <algorithm>
@@ -70,7 +72,7 @@ public:
     void goto_next_point();
     Point predict_next_point();
     int which_thing_is_my_thing(vector<thing_info> current_thing, int distance_limit, int score_limit);
-    int get_dot_thing(vector<thing_info> current_thing);
+    int update_dot(vector<thing_info> current_thing);
 };
 
 float doublecalcAngleFromPoints(Point2f _ptFirstPos, Point2f _ptSecondPos);

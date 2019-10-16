@@ -21,6 +21,7 @@ int thing_buf_index;
 vector<thing_info> things(THING_NUM * 2);
 Ptr<Tracker> trackers[THING_NUM];
 vector<tracking_dot> trackers_dot;
+vector<int> tag_table;
 
 int width, height;
 
@@ -35,14 +36,9 @@ int main(int argc, char **argv)
     namedWindow("Tracker", WINDOW_AUTOSIZE);
 
     vector<vector<string>> file = read_txt("../out.txt");
-    Mat frame = imread("../out.jpg", IMREAD_COLOR);
+    Mat frame;
     vector<thing_info> current_thing;
     get_frame_size(file);
-
-    current_thing = file_to_box(frame, file);
-
-    init_dot(current_thing.size());
-    put_init_value_to_dot(current_thing);
 
     while (1)
     {
@@ -62,22 +58,46 @@ int main(int argc, char **argv)
 
             current_thing = file_to_box(frame, file); //current_thing에는 욜로가 생성한 물체들에대한 정보가 임시로 저장 되어 있음
 
-            bbox_tmp = watchdog(frame, current_thing);
+            //bbox_tmp = watchdog(frame, current_thing);
 
-            for (int i = 0; i < THING_NUM; i++)
+            for (int i = 0; i < trackers_dot.size(); i++) //tracking thing
             {
-                int index = (thing_buf_index % 2) * THING_NUM + i;
-                char tmp[10];
+                trackers_dot[i].update_dot(current_thing);
+            }
 
-                if (trackers_dot[index].tag != -1)
+            for (int i = 0; i < current_thing.size(); i++)
+            {
+                if (current_thing[i].hit == 0) //new thing
                 {
-                    sprintf(tmp, "%d", trackers_dot[index].tag);
-                    rectangle(frame, box_to_Rect2d(trackers_dot[i].bbox), Scalar(255, 0, 0), 2, 1);
-                    circle(frame, trackers_dot[i].p, 2, Scalar(255, 0, 0), -1);                    //for debug
-                    circle(frame, trackers_dot[i].p, 50, Scalar(255, 0, 0), 2);                    //for debug
-                    circle(frame, trackers_dot[i].predict_next_point(), 2, Scalar(0, 0, 255), -1); //for debug
-                    putText(frame, tmp, Point(bbox_tmp[i].x, bbox_tmp[i].y), 2, 2, Scalar(255, 0, 0));
+                    tracking_dot tmp;
+                    tmp.tracker = TrackerMOSSE::create();
+                    tmp.stack_point = vector<Point>(10, Point(-1, -1));
+                    tmp.im = current_thing[i].im;
+                    tmp.bbox = current_thing[i].bbox;
+                    tmp.p = cal_center_point(current_thing[i].bbox);
+                    tmp.name = current_thing[i].name;
+                    tmp.velocity = Point(0, 0);
+                    tmp.tag = get_empty_tag();
+                    tmp.is_missed = false;
+                    trackers_dot.push_back(tmp);
+                    trackers_dot[trackers_dot.size() - 1].put_point_to_stack(tmp.p);
+                    current_thing[i].hit = 1;
                 }
+            }
+
+            for (int i = 0; i < trackers_dot.size(); i++) //delete missed thing
+            {
+                if (trackers_dot[i].tag == -1)
+                    trackers_dot.erase(trackers_dot.begin() + i);
+            }
+
+            for (int i = 0; i < trackers_dot.size(); i++)
+            {
+                rectangle(frame, box_to_Rect2d(trackers_dot[i].bbox), Scalar(255, 0, 0), 2, 1);
+                circle(frame, trackers_dot[i].p, 2, Scalar(255, 0, 0), -1);                    //for debug
+                circle(frame, trackers_dot[i].p, 50, Scalar(255, 0, 0), 2);                    //for debug
+                circle(frame, trackers_dot[i].predict_next_point(), 2, Scalar(0, 0, 255), -1); //for debug
+                putText(frame, to_string(trackers_dot[i].tag), Point(trackers_dot[i].bbox.x * width, trackers_dot[i].bbox.y * height), 2, 2, Scalar(255, 0, 0));
             }
             //msg = make_msg(file);     //이 함수 나중에 고쳐야함!!!!!!
             //sendMessage(s, msg.c_str());
@@ -348,11 +368,26 @@ void init_hit()
 
 int get_empty_tag()
 {
-    for (int i = 0; i < THING_NUM; i++)
+    srand((unsigned int)clock());
+    int tag = rand() % 1000;
+    int make_tag_success = 1;
+
+    while (make_tag_success == 0)
     {
-        if (trackers_dot[i].tag == -1 && trackers_dot[i].miss_stack > 10)
-            return i;
+        tag = rand() % 1000;
+        make_tag_success = 1;
+
+        for (int i = 0; i < trackers_dot.size(); i++)
+        {
+            if (tag == trackers_dot[i].tag)
+            {
+                make_tag_success = 0;
+                break;
+            }
+        }
     }
+
+    return tag;
 }
 
 Rect2d mosse_tracker_update(Mat frame, int tag)
@@ -425,7 +460,7 @@ vector<int> get_least_dis_index_list(vector<float> dis_list, float limit)
 {
     vector<int> result;
 
-    for (int i = 0; i < THING_NUM; i++)
+    for (int i = 0; i < dis_list.size(); i++)
     {
         if (dis_list[i] < limit && (dis_list[i] >= 0))
             result.push_back(i);

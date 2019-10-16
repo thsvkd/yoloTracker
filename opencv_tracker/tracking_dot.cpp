@@ -47,17 +47,16 @@ Point tracking_dot::get_v()
 
 void tracking_dot::put_point_to_stack(Point pp)
 {
-    for (int i = 0; i < stack_num - 1; i++)
-    {
-        stack_point[i + 1] = stack_point[i];
-    }
+    for (int i = stack_num - 1; i > 0; i--)
+        stack_point[i] = stack_point[i - 1];
+        
     stack_point[0] = pp;
 }
 
 Point tracking_dot::cal_v()
 {
-    int sum_num = 0;
     float sum_x = 0, sum_y = 0;
+    int stack_num = 0;
 
     for (int i = 0; i < stack_num; i++)
     {
@@ -65,14 +64,16 @@ Point tracking_dot::cal_v()
         {
             sum_x += stack_point[i].x;
             sum_y += stack_point[i].y;
-            sum_num++;
+            stack_num++;
         }
     }
 
-    sum_x = (float)sum_x / (float)sum_num;
-    sum_y = (float)sum_y / (float)sum_num;
+    sum_x = (float)sum_x / (float)stack_num;
+    sum_y = (float)sum_y / (float)stack_num;
 
-    if (sum_num < 4)
+    if (stack_num <= 1)
+        return Point(0, 0);
+    else if (stack_num < 4)
         return Point(sum_x / 2, sum_y / 2);
     else
         return Point(sum_x, sum_y);
@@ -105,7 +106,7 @@ int tracking_dot::which_thing_is_my_thing(vector<thing_info> current_thing, int 
     float score = -1;
 
     for (int i = 0; i < current_thing.size(); i++)
-        dis_list.push_back(cal_distance(this, current_thing[i]));
+        dis_list.push_back(cal_distance(this, current_thing[i])); //current thing의 위치랑 똑같이 저장 됨
 
     index_list = get_least_dis_index_list(dis_list, distance_limit);
     sort(index_list.begin(), index_list.end());
@@ -126,15 +127,31 @@ int tracking_dot::which_thing_is_my_thing(vector<thing_info> current_thing, int 
     }
 }
 
-int tracking_dot::get_dot_thing(vector<thing_info> current_thing)
+int tracking_dot::update_dot(vector<thing_info> current_thing)
 {
     float score_limit = 2.5;
     float distance_limit = 50;
+    int flag = which_thing_is_my_thing(current_thing, distance_limit, score_limit);
 
-    if (which_thing_is_my_thing(current_thing, distance_limit, score_limit) != -1)
+    if (flag != -1)
     {
+        im = current_thing[flag].im;
+        bbox = current_thing[flag].bbox;
+        p = cal_center_point(current_thing[flag].bbox);
+        name = current_thing[flag].name;
+        im = current_thing[flag].im;
+        is_missed = false;
+        miss_stack = 0;
+        put_point_to_stack(p);
+        current_thing[flag].hit = 1;
     }
     else
     {
+        p = predict_next_point();
+        is_missed = true;
+        miss_stack++;
     }
+
+    if (miss_stack > 10)
+        tag = -1;
 }
