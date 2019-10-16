@@ -9,6 +9,7 @@
         "cmath": "cpp",
         "*.ipp": "cpp",
         "array": "cpp",
-        "string_view": "cpp"
+        "string_view": "cpp",
+        "vector": "cpp"
     }
 }

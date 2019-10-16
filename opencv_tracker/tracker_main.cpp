@@ -20,7 +20,7 @@ socklen_t clnt_addr_size;
 int thing_buf_index;
 vector<thing_info> things(THING_NUM * 2);
 Ptr<Tracker> trackers[THING_NUM];
-vector<tracking_dot> trackers_dot(THING_NUM);
+vector<tracking_dot> trackers_dot;
 
 int width, height;
 
@@ -40,7 +40,8 @@ int main(int argc, char **argv)
     get_frame_size(file);
 
     current_thing = file_to_box(frame, file);
-    init_dot();
+
+    init_dot(current_thing.size());
     put_init_value_to_dot(current_thing);
 
     while (1)
@@ -55,7 +56,6 @@ int main(int argc, char **argv)
         {
             frame = imread("../out.jpg", IMREAD_COLOR);
             vector<Rect2d> bbox_tmp;
-            //init_buf_info();
 
             if (frame.empty())
                 break;
@@ -73,7 +73,9 @@ int main(int argc, char **argv)
                 {
                     sprintf(tmp, "%d", trackers_dot[index].tag);
                     rectangle(frame, box_to_Rect2d(trackers_dot[i].bbox), Scalar(255, 0, 0), 2, 1);
-                    circle(frame, trackers_dot[i].p, 5, Scalar(255, 0, 0), -1);
+                    circle(frame, trackers_dot[i].p, 2, Scalar(255, 0, 0), -1);                    //for debug
+                    circle(frame, trackers_dot[i].p, 50, Scalar(255, 0, 0), 2);                    //for debug
+                    circle(frame, trackers_dot[i].predict_next_point(), 2, Scalar(0, 0, 255), -1); //for debug
                     putText(frame, tmp, Point(bbox_tmp[i].x, bbox_tmp[i].y), 2, 2, Scalar(255, 0, 0));
                 }
             }
@@ -101,19 +103,20 @@ Point cal_center_point(box bbox)
     return Point(x_center, y_center);
 }
 
-void init_dot()
+void init_dot(int size)
 {
-    for (int i = 0; i < THING_NUM; i++)
-    {
-        trackers_dot[i].tracker = TrackerMOSSE::create();
-        trackers_dot[i].stack_point = vector<Point>(10, Point(-1, -1));
-        trackers_dot[i].bbox = Rect2d_to_box(Rect2d(-1, -1, -1, -1));
-        trackers_dot[i].p = Point(-1, -1);
-        trackers_dot[i].name = "";
-        trackers_dot[i].velocity = Point(-1, -1);
-        trackers_dot[i].tag = -1;
-        trackers_dot[i].is_missed = true;
-    }
+    tracking_dot tmp;
+    tmp.tracker = TrackerMOSSE::create();
+    tmp.stack_point = vector<Point>(10, Point(-1, -1));
+    tmp.bbox = Rect2d_to_box(Rect2d(-1, -1, -1, -1));
+    tmp.p = Point(-1, -1);
+    tmp.name = "";
+    tmp.velocity = Point(-1, -1);
+    tmp.tag = -1;
+    tmp.is_missed = true;
+
+    for (int i = 0; i < size; i++)
+        trackers_dot.push_back(tmp);
 }
 
 void put_init_value_to_dot(vector<thing_info> current_thing)
@@ -287,6 +290,7 @@ vector<thing_info> file_to_box(Mat im, vector<vector<string>> file)
         tmp.bbox.h = atof(file[i][4].c_str());
         tmp.im = im(Rect2d(tmp.bbox.x * width, tmp.bbox.y * height, tmp.bbox.w * width, tmp.bbox.h * height));
         tmp.tag = -1;
+        tmp.hit = 0;
 
         result.push_back(tmp);
     }
@@ -346,7 +350,7 @@ int get_empty_tag()
 {
     for (int i = 0; i < THING_NUM; i++)
     {
-        if (trackers_dot[i].tag == -1)
+        if (trackers_dot[i].tag == -1 && trackers_dot[i].miss_stack > 10)
             return i;
     }
 }
@@ -404,12 +408,15 @@ int get_MAX_index_of_things()
     }
 }
 
-float cal_distance(tracking_dot input1, thing_info input2)
+float cal_distance(tracking_dot *input1, thing_info input2)
 {
     float distance = 0.0;
     float limit = 50;
+    Point p2 = cal_center_point(input2.bbox);
+    float x_line = input1->p.x - p2.x;
+    float y_line = input1->p.y - p2.y;
 
-    distance = sqrt(pow(input1.bbox.x * width - input2.bbox.x * width, 2) + pow(input1.bbox.y * height - input2.bbox.y * height, 2));
+    distance = sqrt(pow(x_line, 2) + pow(y_line, 2));
 
     return distance;
 }
@@ -429,18 +436,16 @@ vector<int> get_least_dis_index_list(vector<float> dis_list, float limit)
 
 int thing_exist(thing_info input) //존재하면 존재한 사물의 인덱스를 반환 존재 하지 않으면 -1을 반환
 {
-    float score;
+    float score = -1;
     float score_limit = 2.5;
     float distance_limit = 50;
-    vector<float> dis_list(20, -1);
+    vector<float> dis_list;
     vector<int> index_list;
 
     for (int i = 0; i < THING_NUM; i++)
     {
-        score = -1;
-
         if (trackers_dot[i].tag != -1)
-            dis_list[i] = cal_distance(trackers_dot[i], input);
+            dis_list.push_back(cal_distance(&trackers_dot[i], input));
     }
 
     index_list = get_least_dis_index_list(dis_list, distance_limit);
@@ -473,30 +478,32 @@ vector<Rect2d> watchdog(Mat frame, vector<thing_info> current_thing)
     vector<Rect2d> result;
     Rect2d tmp_2d;
 
+    for (int i = 0; i < THING_NUM; i++)
+        trackers_dot[i].is_missed = true;
+
     for (int i = 0; i < current_thing.size(); i++)
     {
         int flag = thing_exist(current_thing[i]);
         if (flag >= 0) //기존 물체라면 현배 버퍼의 같은 위치로 옮겨온다.
         {
-            trackers_dot[flag].tag = flag;
             trackers_dot[flag].im = current_thing[i].im;
             trackers_dot[flag].bbox = current_thing[i].bbox;
             trackers_dot[flag].name = current_thing[i].name;
             trackers_dot[flag].p = cal_center_point(current_thing[i].bbox);
             trackers_dot[flag].put_point_to_stack(trackers_dot[flag].p);
             trackers_dot[flag].is_missed = false;
+            trackers_dot[flag].miss_stack = 0;
         }
         else if (flag == -1)
         {
             int new_tag = get_empty_tag();
-            current_thing[i].tag = new_tag;
-            trackers_dot[new_tag].tag = flag;
             trackers_dot[new_tag].im = current_thing[i].im;
             trackers_dot[new_tag].bbox = current_thing[i].bbox;
             trackers_dot[new_tag].name = current_thing[i].name; //만약 새 물체라면 현재 버퍼의 새 위치로 옮겨온다.
             trackers_dot[new_tag].p = cal_center_point(current_thing[i].bbox);
             trackers_dot[new_tag].put_point_to_stack(trackers_dot[new_tag].p);
             trackers_dot[new_tag].is_missed = false;
+            trackers_dot[new_tag].miss_stack = 0;
         }
     }
 
@@ -504,8 +511,19 @@ vector<Rect2d> watchdog(Mat frame, vector<thing_info> current_thing)
     {
         if (trackers_dot[i].tag != -1)
         {
-            tmp_2d = box_to_Rect2d(trackers_dot[i].bbox);
-            result.push_back(tmp_2d);
+            if (trackers_dot[i].is_missed == false)
+            {
+                tmp_2d = box_to_Rect2d(trackers_dot[i].bbox);
+                result.push_back(tmp_2d);
+            }
+            else
+            {
+                trackers_dot[i].goto_next_point();
+                trackers_dot[i].is_missed++;
+
+                if (trackers_dot[i].miss_stack > 10)
+                    trackers_dot[i].tag = -1;
+            }
         }
     }
 

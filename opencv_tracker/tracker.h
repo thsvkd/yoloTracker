@@ -55,6 +55,7 @@ public:
     Point velocity;
     int tag;
     int stack_num = 10;
+    int miss_stack = 0;
     bool is_missed = false;
 
     tracking_dot();
@@ -68,6 +69,9 @@ public:
     bool is_empty();
     void goto_next_point();
     Point predict_next_point();
+    float cal_distance_score(vector<thing_info> current_thing, int distance_limit);
+    float cal_matching_score(vector<thing_info> current_thing);
+    int get_dot_thing(vector<thing_info> current_thing);
 };
 
 float doublecalcAngleFromPoints(Point2f _ptFirstPos, Point2f _ptSecondPos);
@@ -75,7 +79,7 @@ void alignImages(Mat &im1, Mat &im2, Mat &im1Reg, Mat &h);
 float align_Images(Mat &im1, Mat &im2);
 
 Point cal_center_point(box bbox);
-void init_dot();
+void init_dot(int size);
 void put_init_value_to_dot(vector<thing_info> tmp_thing);
 void init_msg(char *msg);
 string make_msg(vector<vector<string>> file);
@@ -96,9 +100,9 @@ int get_empty_tag();
 Rect2d mosse_tracker_update(Mat frame, int tag);
 Rect2d mosse_tracker_show(Mat frame, int tag);
 int get_MAX_index_of_things();
-float cal_distance(tracking_dot input1, thing_info input2);
+float cal_distance(tracking_dot *input1, thing_info input2);
 vector<int> get_least_dis_index_list(vector<float> dis_list, float limit);
 int thing_exist(thing_info input);
-vector<Rect2d> watchdog(Mat frame, vector<thing_info> tmp_thing);
+vector<Rect2d> watchdog(Mat frame, vector<thing_info> current_thing);
 
 #endif

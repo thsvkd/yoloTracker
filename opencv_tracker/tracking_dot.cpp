@@ -97,3 +97,54 @@ Point tracking_dot::predict_next_point()
     Point v = cal_v();
     return p + v;
 }
+
+float tracking_dot::cal_distance_score(vector<thing_info> current_thing, int distance_limit)
+{
+    vector<float> dis_list;
+    vector<int> index_list;
+    float score = -1;
+
+    for (int i = 0; i < current_thing.size(); i++)
+        dis_list.push_back(cal_distance(this, current_thing[i]));
+
+    index_list = get_least_dis_index_list(dis_list, distance_limit);
+    sort(index_list.begin(), index_list.end());
+
+    if (index_list.size() == 1)
+        return index_list[0];
+    else if (index_list.size() > 1)
+    {
+        for (int i = 0; i < index_list.size(); i++)
+        {
+            cout << "align_Images start" << endl;
+            cout << trackers_dot[index_list[i]].im.cols << " " << input.im.cols << endl;
+            score = align_Images(trackers_dot[index_list[i]].im, input.im);
+
+            if (score < score_limit && (score >= 0))
+                return index_list[i];
+        }
+    }
+}
+
+float tracking_dot::cal_matching_score(vector<thing_info> current_thing, int score_limit)
+{
+}
+
+int tracking_dot::get_dot_thing(vector<thing_info> current_thing)
+{
+    float score_limit = 2.5;
+    float distance_limit = 50;
+
+    if (cal_distance_score(current_thing, distance_limit) < 50)
+    {
+    }
+    else
+    {
+        if (cal_matching_score(current_thing, score_limit) < score_limit)
+        {
+        }
+        else
+        {
+        }
+    }
+}
