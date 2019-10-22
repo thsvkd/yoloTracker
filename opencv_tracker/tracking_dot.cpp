@@ -62,13 +62,13 @@ Point tracking_dot::cal_v()
         if (stack_point[i].x != -1)
             stack_num++;
 
-    sum_x = (float)(stack_point[stack_num].x - stack_point[0].x) / (float)stack_num;
-    sum_y = (float)(stack_point[stack_num].y - stack_point[0].y) / (float)stack_num;
+    sum_x = (float)(stack_point[stack_num - 1].x - stack_point[0].x) / (float)stack_num;
+    sum_y = (float)(stack_point[stack_num - 1].y - stack_point[0].y) / (float)stack_num;
 
     if (stack_num < 4)
-        return Point(sum_x / 2, sum_y / 2);
+        return Point(-sum_x / 2, -sum_y / 2);
     else
-        return Point(sum_x, sum_y);
+        return Point(-sum_x, -sum_y);
 }
 
 bool tracking_dot::is_empty()
@@ -116,6 +116,7 @@ int tracking_dot::which_thing_is_my_thing(vector<thing_info> current_thing, int 
             if (score < score_limit && (score >= 0))
                 return index_list[i];
         }
+        return index_list[0];
     }
     else
         return -1;
@@ -123,18 +124,19 @@ int tracking_dot::which_thing_is_my_thing(vector<thing_info> current_thing, int 
 
 int tracking_dot::update_dot(vector<thing_info> current_thing)
 {
-    float score_limit = 2.5;
-    float distance_limit = 50;
+    float score_limit = 5;
+    float distance_limit = 100;
 
     int flag = which_thing_is_my_thing(current_thing, distance_limit, score_limit);
     //일치하는 물체의 current_thing 인덱스를 반환
 
-    if (flag != -1)
+    if (flag != -1) //flag 가 -1이 아닌경우는 which_thing_is_my_thing가 잘못되어서 나왔던것!!
     {
         cout << "im_copy start" << endl;
         for (int i = 0; i < current_thing.size(); i++)
         {
-            cout << current_thing[i].name << " "
+            cout << current_thing.size() << " "
+                 << current_thing[i].name << " "
                  << current_thing[i].im.cols << " "
                  << current_thing[i].im.rows << " "
                  << flag << " "
@@ -147,7 +149,6 @@ int tracking_dot::update_dot(vector<thing_info> current_thing)
         name = current_thing[flag].name;
         is_missed = false;
         miss_stack = 0;
-        put_point_to_stack(p);
         velocity = cal_v();
     }
     else
@@ -156,9 +157,7 @@ int tracking_dot::update_dot(vector<thing_info> current_thing)
         is_missed = true;
         miss_stack++;
     }
-
-    if (miss_stack > 10)
-        tag = -1;
+    put_point_to_stack(p);
 
     return flag;
 }

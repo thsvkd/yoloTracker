@@ -10,6 +10,8 @@
         "*.ipp": "cpp",
         "array": "cpp",
         "string_view": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "initializer_list": "cpp",
+        "utility": "cpp"
     }
 }

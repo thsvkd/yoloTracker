@@ -63,9 +63,15 @@ int main(int argc, char **argv)
             cout << "update_dot start" << endl;
             for (int i = 0; i < trackers_dot.size(); i++) //tracking thing
             {
+                cout << i << "trackers_dot update start" << endl;
                 int flag = trackers_dot[i].update_dot(current_thing);
                 if (flag != -1)
                     current_thing[flag].hit = 1;
+                if (trackers_dot[i].miss_stack > 10)
+                {
+                    trackers_dot.erase(trackers_dot.begin() + i);
+                    cout << i << " tracker_dot deleted" << endl;
+                }
             }
             cout << "update_dot end" << endl;
 
@@ -89,24 +95,39 @@ int main(int argc, char **argv)
                     current_thing[i].hit = 1;
                 }
             }
-            cout << "trackers_dot.erase() end" << endl;
-
-            cout << "trackers_dot.push_back() start" << endl;
-            for (int i = 0; i < trackers_dot.size(); i++) //delete missed thing
-            {
-                if (trackers_dot[i].tag == -1)
-                    trackers_dot.erase(trackers_dot.begin() + i);
-            }
-            cout << "trackers_dot.erase() end" << endl;
+            cout << "trackers_dot.push_back() end" << endl;
 
             cout << "draw box start" << endl;
             for (int i = 0; i < trackers_dot.size(); i++)
             {
-                rectangle(frame, box_to_Rect2d(trackers_dot[i].bbox), Scalar(255, 0, 0), 2, 1);
-                circle(frame, trackers_dot[i].p, 2, Scalar(255, 0, 0), -1);                    //for debug
-                circle(frame, trackers_dot[i].p, 50, Scalar(255, 0, 0), 2);                    //for debug
-                circle(frame, trackers_dot[i].predict_next_point(), 2, Scalar(0, 0, 255), -1); //for debug
-                putText(frame, to_string(trackers_dot[i].tag), Point(trackers_dot[i].bbox.x * width, trackers_dot[i].bbox.y * height), 2, 2, Scalar(255, 0, 0));
+                if (!trackers_dot[i].is_missed)
+                {
+                    rectangle(frame, box_to_Rect2d(trackers_dot[i].bbox), Scalar(255, 0, 0), 2, 1);
+                    circle(frame, trackers_dot[i].p, 2, Scalar(255, 0, 0), -1);                    //for debug
+                    circle(frame, trackers_dot[i].p, 100, Scalar(255, 0, 0), 2);                   //for debug
+                    circle(frame, trackers_dot[i].predict_next_point(), 2, Scalar(0, 0, 255), -1); //for debug
+                    putText(frame,
+                            to_string(trackers_dot[i].tag),
+                            Point(trackers_dot[i].bbox.x * width, trackers_dot[i].bbox.y * height),
+                            2,
+                            1,
+                            Scalar(255, 0, 0));
+                }
+                else
+                {
+                    rectangle(frame, box_to_Rect2d(trackers_dot[i].bbox), Scalar(0, 255, 0), 2, 1);
+                    circle(frame, trackers_dot[i].p, 2, Scalar(0, 255, 0), -1);                    //for debug
+                    circle(frame, trackers_dot[i].p, 100, Scalar(0, 255, 0), 2);                   //for debug
+                    circle(frame, trackers_dot[i].predict_next_point(), 2, Scalar(0, 255, 0), -1); //for debug
+                    putText(frame,
+                            to_string(trackers_dot[i].tag) +
+                                "miss stack = " +
+                                to_string(trackers_dot[i].miss_stack),
+                            Point(trackers_dot[i].bbox.x * width, trackers_dot[i].bbox.y * height),
+                            2,
+                            1,
+                            Scalar(255, 0, 0));
+                }
             }
             cout << "draw box start" << endl;
             //msg = make_msg(file);     //이 함수 나중에 고쳐야함!!!!!!

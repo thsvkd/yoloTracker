@@ -148,6 +148,9 @@ float align_Images(Mat &im1, Mat &im2)
     orb->detectAndCompute(im1Gray, Mat(), keypoints1, descriptors1);
     orb->detectAndCompute(im2Gray, Mat(), keypoints2, descriptors2);
 
+    if (descriptors1.cols == 0 || descriptors2.cols == 0)
+        return -1;
+
     // Match features.
     std::vector<DMatch> matches;
     cout << "match start" << endl;
@@ -170,8 +173,8 @@ float align_Images(Mat &im1, Mat &im2)
     // Draw top matches
     Mat imMatches;
     cout << "drawMatches start" << endl;
-    drawMatches(im1, keypoints1, im2, keypoints2, matches, imMatches);
-    imwrite("matches.jpg", imMatches);
+    //drawMatches(im1, keypoints1, im2, keypoints2, matches, imMatches);
+    //imwrite("matches.jpg", imMatches);
 
     // Extract location of good matches
     std::vector<Point2f> points1, points2;
