@@ -60,11 +60,16 @@ int main(int argc, char **argv)
 
             //bbox_tmp = watchdog(frame, current_thing);
 
+            cout << "update_dot start" << endl;
             for (int i = 0; i < trackers_dot.size(); i++) //tracking thing
             {
-                trackers_dot[i].update_dot(current_thing);
+                int flag = trackers_dot[i].update_dot(current_thing);
+                if (flag != -1)
+                    current_thing[flag].hit = 1;
             }
+            cout << "update_dot end" << endl;
 
+            cout << "trackers_dot.push_back() start" << endl;
             for (int i = 0; i < current_thing.size(); i++)
             {
                 if (current_thing[i].hit == 0) //new thing
@@ -84,13 +89,17 @@ int main(int argc, char **argv)
                     current_thing[i].hit = 1;
                 }
             }
+            cout << "trackers_dot.erase() end" << endl;
 
+            cout << "trackers_dot.push_back() start" << endl;
             for (int i = 0; i < trackers_dot.size(); i++) //delete missed thing
             {
                 if (trackers_dot[i].tag == -1)
                     trackers_dot.erase(trackers_dot.begin() + i);
             }
+            cout << "trackers_dot.erase() end" << endl;
 
+            cout << "draw box start" << endl;
             for (int i = 0; i < trackers_dot.size(); i++)
             {
                 rectangle(frame, box_to_Rect2d(trackers_dot[i].bbox), Scalar(255, 0, 0), 2, 1);
@@ -99,6 +108,7 @@ int main(int argc, char **argv)
                 circle(frame, trackers_dot[i].predict_next_point(), 2, Scalar(0, 0, 255), -1); //for debug
                 putText(frame, to_string(trackers_dot[i].tag), Point(trackers_dot[i].bbox.x * width, trackers_dot[i].bbox.y * height), 2, 2, Scalar(255, 0, 0));
             }
+            cout << "draw box start" << endl;
             //msg = make_msg(file);     //이 함수 나중에 고쳐야함!!!!!!
             //sendMessage(s, msg.c_str());
             msg = "";
@@ -322,48 +332,6 @@ void init_mosse_tracker()
 {
     for (int i = 0; i < THING_NUM; i++)
         trackers[i] = TrackerMOSSE::create();
-}
-
-void init_thing_info()
-{
-    box bbox = {-1, -1, -1, -1};
-
-    for (int i = 0; i < THING_NUM; i++)
-    {
-        //int index = (thing_buf_index % 2) * THING_NUM + i;
-        things[0 * THING_NUM + i].tag = -1;
-        things[0 * THING_NUM + i].name = "";
-        things[0 * THING_NUM + i].bbox = bbox;
-        things[0 * THING_NUM + i].hit = 0;
-        things[1 * THING_NUM + i].tag = -1;
-        things[1 * THING_NUM + i].bbox = bbox;
-        things[1 * THING_NUM + i].name = "";
-        things[1 * THING_NUM + i].hit = 0;
-    }
-}
-
-void init_buf_info()
-{
-    box bbox = {-1, -1, -1, -1};
-    int index_c_base = (thing_buf_index % 2) * THING_NUM;
-    int index_p_base = (thing_buf_index % 2 + 1) * THING_NUM;
-
-    for (int i = index_c_base; i < index_c_base + THING_NUM; i++)
-    {
-        things[i].tag = -1;
-        things[i].bbox = bbox;
-        things[i].name = "";
-        things[i].hit = 0;
-    }
-}
-
-void init_hit()
-{
-    for (int i = 0; i < THING_NUM; i++)
-    {
-        things[0 * THING_NUM + i].hit = 0;
-        things[1 * THING_NUM + i].hit = 0;
-    }
 }
 
 int get_empty_tag()

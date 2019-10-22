@@ -49,7 +49,7 @@ void tracking_dot::put_point_to_stack(Point pp)
 {
     for (int i = stack_num - 1; i > 0; i--)
         stack_point[i] = stack_point[i - 1];
-        
+
     stack_point[0] = pp;
 }
 
@@ -58,22 +58,14 @@ Point tracking_dot::cal_v()
     float sum_x = 0, sum_y = 0;
     int stack_num = 0;
 
-    for (int i = 0; i < stack_num; i++)
-    {
+    for (int i = 0; i < stack_point.size() - 1; i++)
         if (stack_point[i].x != -1)
-        {
-            sum_x += stack_point[i].x;
-            sum_y += stack_point[i].y;
             stack_num++;
-        }
-    }
 
-    sum_x = (float)sum_x / (float)stack_num;
-    sum_y = (float)sum_y / (float)stack_num;
+    sum_x = (float)(stack_point[stack_num].x - stack_point[0].x) / (float)stack_num;
+    sum_y = (float)(stack_point[stack_num].y - stack_point[0].y) / (float)stack_num;
 
-    if (stack_num <= 1)
-        return Point(0, 0);
-    else if (stack_num < 4)
+    if (stack_num < 4)
         return Point(sum_x / 2, sum_y / 2);
     else
         return Point(sum_x, sum_y);
@@ -125,25 +117,38 @@ int tracking_dot::which_thing_is_my_thing(vector<thing_info> current_thing, int 
                 return index_list[i];
         }
     }
+    else
+        return -1;
 }
 
 int tracking_dot::update_dot(vector<thing_info> current_thing)
 {
     float score_limit = 2.5;
     float distance_limit = 50;
+
     int flag = which_thing_is_my_thing(current_thing, distance_limit, score_limit);
+    //일치하는 물체의 current_thing 인덱스를 반환
 
     if (flag != -1)
     {
+        cout << "im_copy start" << endl;
+        for (int i = 0; i < current_thing.size(); i++)
+        {
+            cout << current_thing[i].name << " "
+                 << current_thing[i].im.cols << " "
+                 << current_thing[i].im.rows << " "
+                 << flag << " "
+                 << endl;
+        }
         im = current_thing[flag].im;
+        cout << "im_copy end" << endl;
         bbox = current_thing[flag].bbox;
         p = cal_center_point(current_thing[flag].bbox);
         name = current_thing[flag].name;
-        im = current_thing[flag].im;
         is_missed = false;
         miss_stack = 0;
         put_point_to_stack(p);
-        current_thing[flag].hit = 1;
+        velocity = cal_v();
     }
     else
     {
@@ -154,4 +159,6 @@ int tracking_dot::update_dot(vector<thing_info> current_thing)
 
     if (miss_stack > 10)
         tag = -1;
+
+    return flag;
 }
