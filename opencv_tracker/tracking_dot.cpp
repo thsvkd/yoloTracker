@@ -122,7 +122,7 @@ int tracking_dot::which_thing_is_my_thing(vector<thing_info> current_thing, int 
         return -1;
 }
 
-int tracking_dot::update_dot(vector<thing_info> current_thing)
+int tracking_dot::update_dot(Mat frame, vector<thing_info> current_thing)
 {
     float score_limit = 5;
     float distance_limit = 100;
@@ -154,10 +154,21 @@ int tracking_dot::update_dot(vector<thing_info> current_thing)
     else
     {
         p = predict_next_point();
+        bbox.x = p.x;
+        bbox.y = p.y;
         is_missed = true;
         miss_stack++;
     }
     put_point_to_stack(p);
 
     return flag;
+}
+
+bool tracking_dot::mosse_update(Mat frame)
+{
+    Rect2d tmp = box_to_Rect2d(bbox);
+    is_mosse_updated = tracker->update(frame, tmp);
+    bbox = Rect2d_to_box(tmp);
+
+    return is_mosse_updated;
 }

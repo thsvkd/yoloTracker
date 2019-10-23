@@ -59,6 +59,7 @@ public:
     int stack_num = 10;
     int miss_stack = 0;
     bool is_missed = false;
+    bool is_mosse_updated = false;
 
     tracking_dot();
     tracking_dot(Point pp);
@@ -72,7 +73,8 @@ public:
     void goto_next_point();
     Point predict_next_point();
     int which_thing_is_my_thing(vector<thing_info> current_thing, int distance_limit, int score_limit);
-    int update_dot(vector<thing_info> current_thing);
+    int update_dot(Mat frame, vector<thing_info> current_thing);
+    bool mosse_update(Mat frame);
 };
 
 float doublecalcAngleFromPoints(Point2f _ptFirstPos, Point2f _ptSecondPos);
@@ -95,8 +97,8 @@ box Rect2d_to_box(Rect2d rect2d);
 vector<thing_info> file_to_box(Mat im, vector<vector<string>> file);
 void init_mosse_tracker();
 int get_empty_tag();
-Rect2d mosse_tracker_update(Mat frame, int tag);
-Rect2d mosse_tracker_show(Mat frame, int tag);
+//Rect2d mosse_tracker_update(Mat frame, int tag);
+//Rect2d mosse_tracker_show(Mat frame, int tag);
 int get_MAX_index_of_things();
 float cal_distance(tracking_dot *input1, thing_info input2);
 vector<int> get_least_dis_index_list(vector<float> dis_list, float limit);

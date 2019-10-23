@@ -17,7 +17,6 @@ struct sockaddr_in clntaddr;
 int addrlen = sizeof(servaddr); //서버 주소의 size를 저장
 socklen_t clnt_addr_size;
 
-int thing_buf_index;
 vector<thing_info> things(THING_NUM * 2);
 Ptr<Tracker> trackers[THING_NUM];
 vector<tracking_dot> trackers_dot;
@@ -27,8 +26,6 @@ int width, height;
 
 int main(int argc, char **argv)
 {
-    Rect2d bbox_tmp;
-    thing_buf_index = 0;
     // int s = connect_to_server("192.168.43.95", "8000");
     string msg;
     char buf[512] = {0};
@@ -51,23 +48,21 @@ int main(int argc, char **argv)
         if (image_read_enable(file))
         {
             frame = imread("../out.jpg", IMREAD_COLOR);
-            vector<Rect2d> bbox_tmp;
 
             if (frame.empty())
                 break;
 
             current_thing = file_to_box(frame, file); //current_thing에는 욜로가 생성한 물체들에대한 정보가 임시로 저장 되어 있음
 
-            //bbox_tmp = watchdog(frame, current_thing);
-
             cout << "update_dot start" << endl;
             for (int i = 0; i < trackers_dot.size(); i++) //tracking thing
             {
                 cout << i << "trackers_dot update start" << endl;
-                int flag = trackers_dot[i].update_dot(current_thing);
+                int flag = trackers_dot[i].update_dot(frame, current_thing);
+
                 if (flag != -1)
                     current_thing[flag].hit = 1;
-                if (trackers_dot[i].miss_stack > 10)
+                if (trackers_dot[i].miss_stack > 20)
                 {
                     trackers_dot.erase(trackers_dot.begin() + i);
                     cout << i << " tracker_dot deleted" << endl;
@@ -82,9 +77,10 @@ int main(int argc, char **argv)
                 {
                     tracking_dot tmp;
                     tmp.tracker = TrackerMOSSE::create();
+                    tmp.bbox = current_thing[i].bbox;
+                    tmp.tracker->init(frame, box_to_Rect2d(tmp.bbox));
                     tmp.stack_point = vector<Point>(10, Point(-1, -1));
                     tmp.im = current_thing[i].im;
-                    tmp.bbox = current_thing[i].bbox;
                     tmp.p = cal_center_point(current_thing[i].bbox);
                     tmp.name = current_thing[i].name;
                     tmp.velocity = Point(0, 0);
@@ -126,7 +122,7 @@ int main(int argc, char **argv)
                             Point(trackers_dot[i].bbox.x * width, trackers_dot[i].bbox.y * height),
                             2,
                             1,
-                            Scalar(255, 0, 0));
+                            Scalar(0, 255, 0));
                 }
             }
             cout << "draw box start" << endl;
@@ -140,7 +136,6 @@ int main(int argc, char **argv)
         //     break;
 
         imshow("Tracker", frame);
-        thing_buf_index++;
         if (waitKey(1) == 'q')
             break;
     }
@@ -194,9 +189,8 @@ string make_msg(vector<vector<string>> file) //수정 필요!
 
     for (int i = 1; i < file.size(); i++)
     {
-        int index = (thing_buf_index % 2) * THING_NUM + i - 1;
         tmp += file[i][0] + " " + file[i][1] + " " + file[i][2] + " " + file[i][3] + " " + file[i][4] + " ";
-        tmp += to_string(trackers_dot[index].tag);
+        tmp += to_string(trackers_dot[i].tag);
     }
 
     return tmp;
@@ -332,7 +326,6 @@ vector<thing_info> file_to_box(Mat im, vector<vector<string>> file)
     for (int i = 1; i < file.size(); i++)
     {
         thing_info tmp;
-        int index = (thing_buf_index % 2) * THING_NUM + i - 1;
 
         tmp.name = file[i][0];
         tmp.bbox.x = atof(file[i][1].c_str());
@@ -379,49 +372,24 @@ int get_empty_tag()
     return tag;
 }
 
-Rect2d mosse_tracker_update(Mat frame, int tag)
-{
-    Rect2d bbox;
-    if (tag != -1)
-    {
-        int index = (thing_buf_index % 2) * THING_NUM + tag;
-        float x = things[index].bbox.x * width;
-        float y = things[index].bbox.y * height;
-        float w = things[index].bbox.w * width;
-        float h = things[index].bbox.h * height;
-        bbox = Rect2d((int)x, (int)y, (int)w, (int)h);
+// Rect2d mosse_tracker_update(Mat frame, int tag)
+// {
+//     Rect2d bbox;
+//     if (tag != -1)
+//     {
+//         int index = (thing_buf_index % 2) * THING_NUM + tag;
+//         float x = things[index].bbox.x * width;
+//         float y = things[index].bbox.y * height;
+//         float w = things[index].bbox.w * width;
+//         float h = things[index].bbox.h * height;
+//         bbox = Rect2d((int)x, (int)y, (int)w, (int)h);
 
-        trackers[index] = TrackerMOSSE::create();
-        bool t_ok = trackers[tag]->init(frame, bbox);
-    }
+//         trackers[index] = TrackerMOSSE::create();
+//         bool t_ok = trackers[tag]->init(frame, bbox);
+//     }
 
-    return bbox;
-}
-
-Rect2d mosse_tracker_show(Mat frame, int tag)
-{
-    box bbbox;
-    Rect2d bbbox_d;
-
-    if (tag != -1)
-    {
-        int index = (thing_buf_index % 2) * THING_NUM + tag;
-        bbbox.x = things[index].bbox.x;
-        bbbox.y = things[index].bbox.y;
-        bbbox.w = things[index].bbox.w;
-        bbbox.h = things[index].bbox.h;
-
-        bbbox_d = Rect2d((int)(bbbox.x * width), (int)(bbbox.y * height), (int)(bbbox.w * width), (int)(bbbox.h * height));
-        trackers[tag]->update(frame, bbbox_d);
-
-        things[index].bbox.x = (float)bbbox_d.x / (float)width;
-        things[index].bbox.y = (float)bbbox_d.y / (float)height;
-        things[index].bbox.w = (float)bbbox_d.width / (float)width;
-        things[index].bbox.h = (float)bbbox_d.height / (float)height;
-    }
-
-    return bbbox_d;
-}
+//     return bbox;
+// }
 
 int get_MAX_index_of_things()
 {
