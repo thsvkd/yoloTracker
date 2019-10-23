@@ -118,7 +118,7 @@ int main(int argc, char **argv)
                     rectangle(frame, box_to_Rect2d(trackers_dot[i].bbox), Scalar(0, 255, 0), 2, 1);
                     circle(frame, trackers_dot[i].p, 2, Scalar(0, 255, 0), -1);                    //for debug
                     circle(frame, trackers_dot[i].p, 100, Scalar(0, 255, 0), 2);                   //for debug
-                    circle(frame, trackers_dot[i].predict_next_point(), 2, Scalar(0, 255, 0), -1); //for debug
+                    circle(frame, trackers_dot[i].predict_next_point(), 2, Scalar(0, 0, 255), -1); //for debug
                     putText(frame,
                             to_string(trackers_dot[i].tag) +
                                 "miss stack = " +

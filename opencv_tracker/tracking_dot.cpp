@@ -130,7 +130,7 @@ int tracking_dot::update_dot(vector<thing_info> current_thing)
     int flag = which_thing_is_my_thing(current_thing, distance_limit, score_limit);
     //일치하는 물체의 current_thing 인덱스를 반환
 
-    if (flag != -1) //flag 가 -1이 아닌경우는 which_thing_is_my_thing가 잘못되어서 나왔던것!!
+    if (flag != -1 && current_thing[flag].hit != 1) //flag 가 -1이 아닌경우는 which_thing_is_my_thing가 잘못되어서 나왔던것!!
     {
         cout << "im_copy start" << endl;
         for (int i = 0; i < current_thing.size(); i++)
