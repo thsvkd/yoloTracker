@@ -54,6 +54,8 @@ int main(int argc, char **argv)
 
             current_thing = file_to_box(frame, file); //current_thing에는 욜로가 생성한 물체들에대한 정보가 임시로 저장 되어 있음
 
+            putText(frame, file[0][5], Point(30, 30), 2, 1, Scalar(255, 255, 0));
+
             cout << "update_dot start" << endl;
             for (int i = 0; i < trackers_dot.size(); i++) //tracking thing
             {
@@ -65,6 +67,7 @@ int main(int argc, char **argv)
                 if (trackers_dot[i].miss_stack > 20)
                 {
                     trackers_dot.erase(trackers_dot.begin() + i);
+                    i--;
                     cout << i << " tracker_dot deleted" << endl;
                 }
             }
@@ -76,9 +79,7 @@ int main(int argc, char **argv)
                 if (current_thing[i].hit == 0) //new thing
                 {
                     tracking_dot tmp;
-                    tmp.tracker = TrackerMOSSE::create();
                     tmp.bbox = current_thing[i].bbox;
-                    tmp.tracker->init(frame, box_to_Rect2d(tmp.bbox));
                     tmp.stack_point = vector<Point>(10, Point(-1, -1));
                     tmp.im = current_thing[i].im;
                     tmp.p = cal_center_point(current_thing[i].bbox);
@@ -400,13 +401,12 @@ int get_MAX_index_of_things()
     }
 }
 
-float cal_distance(tracking_dot *input1, thing_info input2)
+float cal_distance(Point input1, thing_info input2)
 {
     float distance = 0.0;
-    float limit = 50;
     Point p2 = cal_center_point(input2.bbox);
-    float x_line = input1->p.x - p2.x;
-    float y_line = input1->p.y - p2.y;
+    float x_line = input1.x - p2.x;
+    float y_line = input1.y - p2.y;
 
     distance = sqrt(pow(x_line, 2) + pow(y_line, 2));
 
@@ -426,98 +426,60 @@ vector<int> get_least_dis_index_list(vector<float> dis_list, float limit)
     return result;
 }
 
-int thing_exist(thing_info input) //존재하면 존재한 사물의 인덱스를 반환 존재 하지 않으면 -1을 반환
-{
-    float score = -1;
-    float score_limit = 2.5;
-    float distance_limit = 50;
-    vector<float> dis_list;
-    vector<int> index_list;
+// vector<Rect2d> watchdog(Mat frame, vector<thing_info> current_thing)
+// {
+//     float r_limit = 5.0;
+//     vector<Rect2d> result;
+//     Rect2d tmp_2d;
 
-    for (int i = 0; i < THING_NUM; i++)
-    {
-        if (trackers_dot[i].tag != -1)
-            dis_list.push_back(cal_distance(&trackers_dot[i], input));
-    }
+//     for (int i = 0; i < THING_NUM; i++)
+//         trackers_dot[i].is_missed = true;
 
-    index_list = get_least_dis_index_list(dis_list, distance_limit);
-    sort(index_list.begin(), index_list.end());
+//     for (int i = 0; i < current_thing.size(); i++)
+//     {
+//         int flag = thing_exist(current_thing[i]);
+//         if (flag >= 0) //기존 물체라면 현배 버퍼의 같은 위치로 옮겨온다.
+//         {
+//             trackers_dot[flag].im = current_thing[i].im;
+//             trackers_dot[flag].bbox = current_thing[i].bbox;
+//             trackers_dot[flag].name = current_thing[i].name;
+//             trackers_dot[flag].p = cal_center_point(current_thing[i].bbox);
+//             trackers_dot[flag].put_point_to_stack(trackers_dot[flag].p);
+//             trackers_dot[flag].is_missed = false;
+//             trackers_dot[flag].miss_stack = 0;
+//         }
+//         else if (flag == -1)
+//         {
+//             int new_tag = get_empty_tag();
+//             trackers_dot[new_tag].im = current_thing[i].im;
+//             trackers_dot[new_tag].bbox = current_thing[i].bbox;
+//             trackers_dot[new_tag].name = current_thing[i].name; //만약 새 물체라면 현재 버퍼의 새 위치로 옮겨온다.
+//             trackers_dot[new_tag].p = cal_center_point(current_thing[i].bbox);
+//             trackers_dot[new_tag].put_point_to_stack(trackers_dot[new_tag].p);
+//             trackers_dot[new_tag].is_missed = false;
+//             trackers_dot[new_tag].miss_stack = 0;
+//         }
+//     }
 
-    if (index_list.size() == 1)
-        return index_list[0];
-    else if (index_list.size() > 1)
-    {
-        for (int i = 0; i < index_list.size(); i++)
-        {
-            if (!trackers_dot[index_list[i]].im.empty())
-            {
-                cout << "align_Images start" << endl;
-                cout << trackers_dot[index_list[i]].im.cols << " " << input.im.cols << endl;
-                score = align_Images(trackers_dot[index_list[i]].im, input.im);
-            }
+//     for (int i = 0; i < THING_NUM; i++) //사물들의 박스를 그리기위한 좌표를 생성
+//     {
+//         if (trackers_dot[i].tag != -1)
+//         {
+//             if (trackers_dot[i].is_missed == false)
+//             {
+//                 tmp_2d = box_to_Rect2d(trackers_dot[i].bbox);
+//                 result.push_back(tmp_2d);
+//             }
+//             else
+//             {
+//                 trackers_dot[i].goto_next_point();
+//                 trackers_dot[i].is_missed++;
 
-            if (score < score_limit && (score >= 0))
-                return index_list[i];
-        }
-    }
+//                 if (trackers_dot[i].miss_stack > 10)
+//                     trackers_dot[i].tag = -1;
+//             }
+//         }
+//     }
 
-    return -1;
-}
-
-vector<Rect2d> watchdog(Mat frame, vector<thing_info> current_thing)
-{
-    float r_limit = 5.0;
-    vector<Rect2d> result;
-    Rect2d tmp_2d;
-
-    for (int i = 0; i < THING_NUM; i++)
-        trackers_dot[i].is_missed = true;
-
-    for (int i = 0; i < current_thing.size(); i++)
-    {
-        int flag = thing_exist(current_thing[i]);
-        if (flag >= 0) //기존 물체라면 현배 버퍼의 같은 위치로 옮겨온다.
-        {
-            trackers_dot[flag].im = current_thing[i].im;
-            trackers_dot[flag].bbox = current_thing[i].bbox;
-            trackers_dot[flag].name = current_thing[i].name;
-            trackers_dot[flag].p = cal_center_point(current_thing[i].bbox);
-            trackers_dot[flag].put_point_to_stack(trackers_dot[flag].p);
-            trackers_dot[flag].is_missed = false;
-            trackers_dot[flag].miss_stack = 0;
-        }
-        else if (flag == -1)
-        {
-            int new_tag = get_empty_tag();
-            trackers_dot[new_tag].im = current_thing[i].im;
-            trackers_dot[new_tag].bbox = current_thing[i].bbox;
-            trackers_dot[new_tag].name = current_thing[i].name; //만약 새 물체라면 현재 버퍼의 새 위치로 옮겨온다.
-            trackers_dot[new_tag].p = cal_center_point(current_thing[i].bbox);
-            trackers_dot[new_tag].put_point_to_stack(trackers_dot[new_tag].p);
-            trackers_dot[new_tag].is_missed = false;
-            trackers_dot[new_tag].miss_stack = 0;
-        }
-    }
-
-    for (int i = 0; i < THING_NUM; i++) //사물들의 박스를 그리기위한 좌표를 생성
-    {
-        if (trackers_dot[i].tag != -1)
-        {
-            if (trackers_dot[i].is_missed == false)
-            {
-                tmp_2d = box_to_Rect2d(trackers_dot[i].bbox);
-                result.push_back(tmp_2d);
-            }
-            else
-            {
-                trackers_dot[i].goto_next_point();
-                trackers_dot[i].is_missed++;
-
-                if (trackers_dot[i].miss_stack > 10)
-                    trackers_dot[i].tag = -1;
-            }
-        }
-    }
-
-    return result;
-}
+//     return result;
+// }

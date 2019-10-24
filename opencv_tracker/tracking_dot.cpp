@@ -3,6 +3,8 @@
 using namespace std;
 using namespace cv;
 
+extern int width, height;
+
 tracking_dot::tracking_dot()
 {
     p = Point(0, 0);
@@ -98,7 +100,7 @@ int tracking_dot::which_thing_is_my_thing(vector<thing_info> current_thing, int 
     float score = -1;
 
     for (int i = 0; i < current_thing.size(); i++)
-        dis_list.push_back(cal_distance(this, current_thing[i])); //current thing의 위치랑 똑같이 저장 됨
+        dis_list.push_back(cal_distance(p, current_thing[i])); //current thing의 위치랑 똑같이 저장 됨
 
     index_list = get_least_dis_index_list(dis_list, distance_limit);
     sort(index_list.begin(), index_list.end());
@@ -154,8 +156,8 @@ int tracking_dot::update_dot(Mat frame, vector<thing_info> current_thing)
     else
     {
         p = predict_next_point();
-        bbox.x = p.x;
-        bbox.y = p.y;
+        bbox.x = (float)p.x / (float)width - bbox.w / 2;
+        bbox.y = (float)p.y / (float)height - bbox.h / 2;
         is_missed = true;
         miss_stack++;
     }

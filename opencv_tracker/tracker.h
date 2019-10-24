@@ -100,9 +100,8 @@ int get_empty_tag();
 //Rect2d mosse_tracker_update(Mat frame, int tag);
 //Rect2d mosse_tracker_show(Mat frame, int tag);
 int get_MAX_index_of_things();
-float cal_distance(tracking_dot *input1, thing_info input2);
+float cal_distance(Point input1, thing_info input2);
 vector<int> get_least_dis_index_list(vector<float> dis_list, float limit);
-int thing_exist(thing_info input);
-vector<Rect2d> watchdog(Mat frame, vector<thing_info> current_thing);
+//vector<Rect2d> watchdog(Mat frame, vector<thing_info> current_thing);
 
 #endif

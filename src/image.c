@@ -11,6 +11,7 @@
 #include "stb_image_write.h"
 
 int windows = 0;
+extern int couter_buf = 0;
 
 float colors[6][3] = {{1, 0, 1}, {0, 0, 1}, {0, 1, 1}, {0, 1, 0}, {1, 1, 0}, {1, 0, 0}};
 
@@ -275,7 +276,7 @@ void draw_detections(image im, detection *dets, int num, float thresh, char **na
     char tmp[256] = {0};
     char name_filter[1][256] = {"person"};
 
-    sprintf(tmp, "%dx%d cam_num : %d 1\n", im.w, im.h, CAM_NUM);
+    sprintf(tmp, "%dx%d cam_num : %d 1 %d\n", im.w, im.h, CAM_NUM, couter_buf);
     strcat(out, tmp);
 
     for (i = 0; i < num; ++i)

@@ -18,6 +18,7 @@ static char **demo_names;
 static image **demo_alphabet;
 static int demo_classes;
 void *cap[CAM_NUM];
+int couter_buf;
 
 static network *net;
 static image buff[3];
@@ -297,6 +298,7 @@ void demo(char *cfgfile, char *weightfile, float thresh, int cam_index, const ch
         pthread_join(fetch_thread, 0);
         pthread_join(detect_thread, 0);
         ++count;
+        couter_buf = count;
     }
 }
 
