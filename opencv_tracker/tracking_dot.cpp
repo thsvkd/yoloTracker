@@ -49,7 +49,7 @@ Point tracking_dot::get_v()
 
 void tracking_dot::put_point_to_stack(Point pp)
 {
-    for (int i = stack_num - 1; i > 0; i--)
+    for (int i = stack_point.size() - 1; i > 0; i--)
         stack_point[i] = stack_point[i - 1];
 
     stack_point[0] = pp;
@@ -58,16 +58,16 @@ void tracking_dot::put_point_to_stack(Point pp)
 Point tracking_dot::cal_v()
 {
     float sum_x = 0, sum_y = 0;
-    int stack_num = 0;
+    int stack_n = 0;
 
     for (int i = 0; i < stack_point.size() - 1; i++)
         if (stack_point[i].x != -1)
-            stack_num++;
+            stack_n++;
 
-    sum_x = (float)(stack_point[stack_num - 1].x - stack_point[0].x) / (float)stack_num;
-    sum_y = (float)(stack_point[stack_num - 1].y - stack_point[0].y) / (float)stack_num;
+    sum_x = (float)(stack_point[stack_n - 1].x - stack_point[0].x) / (float)stack_n;
+    sum_y = (float)(stack_point[stack_n - 1].y - stack_point[0].y) / (float)stack_n;
 
-    if (stack_num < 4)
+    if (stack_n < 4)
         return Point(-sum_x / 2, -sum_y / 2);
     else
         return Point(-sum_x, -sum_y);

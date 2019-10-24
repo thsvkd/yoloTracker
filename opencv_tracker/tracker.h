@@ -56,7 +56,7 @@ public:
     string name;
     Point velocity;
     int tag;
-    int stack_num = 10;
+    int stack_num = 30;
     int miss_stack = 0;
     bool is_missed = false;
     bool is_mosse_updated = false;
