@@ -85,7 +85,7 @@ Point cal_center_point(box bbox);
 void init_dot(int size);
 void put_init_value_to_dot(vector<thing_info> tmp_thing);
 void init_msg(char *msg);
-string make_msg(vector<vector<string>> file);
+string make_msg();
 void make_txt(vector<vector<string>> file);
 int image_read_enable(vector<vector<string>> file);
 void get_frame_size(vector<vector<string>> file);

@@ -127,7 +127,7 @@ int tracking_dot::which_thing_is_my_thing(vector<thing_info> current_thing, int 
 int tracking_dot::update_dot(Mat frame, vector<thing_info> current_thing)
 {
     float score_limit = 5;
-    float distance_limit = 100;
+    float distance_limit = 200;
 
     int flag = which_thing_is_my_thing(current_thing, distance_limit, score_limit);
     //일치하는 물체의 current_thing 인덱스를 반환

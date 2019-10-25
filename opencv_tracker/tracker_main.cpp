@@ -26,7 +26,7 @@ int width, height;
 
 int main(int argc, char **argv)
 {
-    // int s = connect_to_server("192.168.43.95", "8000");
+    int s = connect_to_server("192.168.1.4", "8000");
     string msg;
     char buf[512] = {0};
 
@@ -39,7 +39,7 @@ int main(int argc, char **argv)
 
     while (1)
     {
-        file = read_txt("../out.txt");
+        file = read_txt("../out.txt"); // comment
         get_frame_size(file);
 
         if (file.size() == 0)
@@ -101,7 +101,7 @@ int main(int argc, char **argv)
                 {
                     rectangle(frame, box_to_Rect2d(trackers_dot[i].bbox), Scalar(255, 0, 0), 2, 1);
                     circle(frame, trackers_dot[i].p, 2, Scalar(255, 0, 0), -1);                    //for debug
-                    circle(frame, trackers_dot[i].p, 100, Scalar(255, 0, 0), 2);                   //for debug
+                    circle(frame, trackers_dot[i].p, 200, Scalar(255, 0, 0), 2);                   //for debug
                     circle(frame, trackers_dot[i].predict_next_point(), 2, Scalar(0, 0, 255), -1); //for debug
                     putText(frame,
                             to_string(trackers_dot[i].tag),
@@ -114,7 +114,7 @@ int main(int argc, char **argv)
                 {
                     rectangle(frame, box_to_Rect2d(trackers_dot[i].bbox), Scalar(0, 255, 0), 2, 1);
                     circle(frame, trackers_dot[i].p, 2, Scalar(0, 255, 0), -1);                    //for debug
-                    circle(frame, trackers_dot[i].p, 100, Scalar(0, 255, 0), 2);                   //for debug
+                    circle(frame, trackers_dot[i].p, 200, Scalar(0, 255, 0), 2);                   //for debug
                     circle(frame, trackers_dot[i].predict_next_point(), 2, Scalar(0, 0, 255), -1); //for debug
                     putText(frame,
                             to_string(trackers_dot[i].tag) +
@@ -127,14 +127,11 @@ int main(int argc, char **argv)
                 }
             }
             cout << "draw box start" << endl;
-            //msg = make_msg(file);     //이 함수 나중에 고쳐야함!!!!!!
-            //sendMessage(s, msg.c_str());
+            msg = make_msg(); //이 함수 나중에 고쳐야함!!!!!! comment
+            sendMessage(s, msg.c_str());
             msg = "";
             make_txt(file);
         }
-
-        // if (waitKey(1) == 'q')
-        //     break;
 
         imshow("Tracker", frame);
         if (waitKey(1) == 'q')
@@ -184,14 +181,21 @@ void init_msg(char *msg)
         msg[i] = 0;
 }
 
-string make_msg(vector<vector<string>> file) //수정 필요!
+string make_msg() //수정 필요!
 {
     string tmp;
 
-    for (int i = 1; i < file.size(); i++)
+    for (int i = 0; i < trackers_dot.size(); i++)
     {
-        tmp += file[i][0] + " " + file[i][1] + " " + file[i][2] + " " + file[i][3] + " " + file[i][4] + " ";
-        tmp += to_string(trackers_dot[i].tag);
+        if (!trackers_dot[i].is_missed)
+        {
+            tmp += trackers_dot[i].name + " " +
+                   to_string(trackers_dot[i].bbox.x) + " " +
+                   to_string(trackers_dot[i].bbox.y) + " " +
+                   to_string(trackers_dot[i].bbox.w) + " " +
+                   to_string(trackers_dot[i].bbox.h) + " " +
+                   to_string(trackers_dot[i].tag) + "\n";
+        }
     }
 
     return tmp;

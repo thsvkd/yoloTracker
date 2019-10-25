@@ -5,10 +5,31 @@
 #include "opencv2/opencv.hpp"
 #include "image.h"
 
+///////////////////////////////////////////////////////
+// this part is edited by Sung Hun //////////////
+///////////////////////////////////////////////////////
+//#include "ros/ros.h"
+//#include "image_transport/image_transport.h"
+//#include "opencv2/highgui/highgui.hpp"
+//#include "cv_bridge/cv_bridge.h"
+////////////////////////////////////////////////////////
+
 using namespace cv;
 
 extern "C"
 {
+    //void imageCallback(const sensor_msgs::ImageConstPtr& msg)
+    //{
+    //    try
+    //    {
+    //        imshow("view", cv_bridge::toCvShare(msg, "bgr8")->image);
+    //        waitKey(30);
+    //    }
+    //    catch(cv_bridge::exception& e)
+    //    {
+    //        ROS_ERROR("Could not convert from '%s' to 'bgr8'.", msg->encoding.c_str());
+    //    }
+    //}
 
     IplImage *image_to_ipl(image im)
     {
