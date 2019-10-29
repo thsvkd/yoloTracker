@@ -8,9 +8,11 @@
 #include "image.h"
 #include "demo.h"
 #include <sys/time.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <unistd.h>
 
 #define DEMO 1
-#define MULTI 1
 
 #ifdef OPENCV
 
@@ -19,6 +21,8 @@ static image **demo_alphabet;
 static int demo_classes;
 void *cap[CAM_NUM];
 int couter_buf;
+
+int sokt[STREAM];
 
 static network *net;
 static image buff[3];
@@ -151,8 +155,10 @@ void *detect_in_thread(void *ptr)
 void *fetch_in_thread(void *ptr)
 {
     free_image(buff[buff_index]);
-    if (MULTI)
+    if (CAM_NUM > 1)
         buff[buff_index] = get_image_from_stream_cus(cap);
+    else if (STREAM)
+        buff[buff_index] = open_video_stream_cus(sokt);
     else
         buff[buff_index] = get_image_from_stream(cap[0]);
     if (buff[buff_index].data == 0)
@@ -230,6 +236,14 @@ void demo(char *cfgfile, char *weightfile, float thresh, int cam_index, const ch
 
     srand(2222222);
 
+    char serverIP[STREAM][20] = {"192.168.1.2", "127.0.0.1"};
+    int serverPort[STREAM] = {4099, 4098};
+
+    printf("a\n");
+
+    get_video_socket(sokt, serverIP, serverPort);
+    printf("a\n");
+
     int i;
     demo_total = size_network(net);
     predictions = calloc(demo_frame, sizeof(float *));
@@ -239,29 +253,36 @@ void demo(char *cfgfile, char *weightfile, float thresh, int cam_index, const ch
     }
     avg = calloc(demo_total, sizeof(float));
 
-    if (filename)
+    if (STREAM == 0)
     {
-        printf("video file: %s\n", filename);
-        cap[0] = open_video_stream(filename, 0, 0, 0, 0);
+        if (filename)
+        {
+            printf("video file: %s\n", filename);
+            cap[0] = open_video_stream(filename, 0, 0, 0, 0);
+            buff[0] = get_image_from_stream(cap[0]);
+        }
+        else
+        {
+            w = 640;
+            h = 480;
+
+            for (i = 0; i < CAM_NUM; i++)
+            {
+                cap[i] = open_video_stream(0, i, w, h, frames);
+                if (!cap[i])
+                    error("Couldn't connect to webcam.\n");
+            }
+
+            buff[0] = get_image_from_stream_cus(cap);
+        }
     }
     else
     {
-        w = 640;
-        h = 480;
-        for (i = 0; i < CAM_NUM; i++)
-            cap[i] = open_video_stream(0, i, w, h, frames);
+        printf("get video stream...");
+
+        buff[0] = open_video_stream_cus(sokt);
     }
 
-    for (i = 0; i < CAM_NUM; i++)
-    {
-        if (!cap[i])
-            error("Couldn't connect to webcam.\n");
-    }
-
-    if (filename)
-        buff[0] = get_image_from_stream(cap[0]);
-    else
-        buff[0] = get_image_from_stream_cus(cap);
     buff[1] = copy_image(buff[0]);
     buff[2] = copy_image(buff[0]);
     buff_letter[0] = letterbox_image(buff[0], net->w, net->h);
@@ -300,6 +321,9 @@ void demo(char *cfgfile, char *weightfile, float thresh, int cam_index, const ch
         ++count;
         couter_buf = count;
     }
+
+    for (int i = 0; i < STREAM; i++)
+        close(sokt[i]);
 }
 
 /*

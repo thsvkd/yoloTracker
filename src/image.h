@@ -8,6 +8,9 @@
 #include <math.h>
 #include "box.h"
 #include "darknet.h"
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <unistd.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -20,6 +23,8 @@ extern "C"
     image load_image_cv(char *filename, int channels);
     int show_image_cv(image im, const char *name, int ms);
     image get_image_from_stream_cus(void **p);
+    void get_video_socket(int *sokt, char serverIP[][20], int *serverPort);
+    image open_video_stream_cus(int *sokt);
 #endif
 
     float get_color(int c, int x, int max);

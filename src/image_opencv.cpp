@@ -210,6 +210,85 @@ extern "C"
                 moveWindow(name, 0, 0);
         }
     }
+
+    void get_video_socket(int *sokt, char serverIP[][20], int *serverPort)
+    {
+        struct sockaddr_in serverAddr[STREAM];
+        socklen_t addrLen[STREAM];
+
+        printf("a\n");
+
+        for (int i = 0; i < STREAM; i++)
+        {
+            printf("%d socket init start\n", i);
+            addrLen[i] = sizeof(struct sockaddr_in);
+            if ((sokt[i] = socket(PF_INET, SOCK_STREAM, 0)) < 0)
+            {
+                printf("socket() failed");
+            }
+
+            printf("%d socket() fin\n", i);
+
+            serverAddr[i].sin_family = PF_INET;
+            printf("%d serverAddr.sin_family fin\n", i);
+            printf("%s\n", serverIP[i]);
+            serverAddr[i].sin_addr.s_addr = inet_addr(serverIP[i]);
+            printf("%d serverAddr.sin_addr.s_addr fin\n", i);
+            serverAddr[i].sin_port = htons(serverPort[i]);
+
+            printf("%d serverAddr() fin\n", i);
+
+            if (connect(sokt[i], (sockaddr *)&serverAddr[i], addrLen[i]) < 0)
+            {
+                printf("connect() failed!");
+            }
+
+            printf("%d socket all fin\n", i);
+        }
+    }
+
+    image open_video_stream_cus(int *sokt)
+    {
+        Mat result;
+        Mat img[STREAM];
+
+        for (int i = 0; i < STREAM; i++)
+        {
+            img[i] = Mat::zeros(480, 640, CV_8UC3);
+            int imgSize = img[i].total() * img[i].elemSize();
+            uchar *iptr = img[i].data;
+            int bytes = 0;
+
+            std::cout << "Image Size:" << imgSize << std::endl;
+
+            if ((bytes = recv(sokt[i], iptr, imgSize, MSG_WAITALL)) == -1)
+            {
+                std::cerr << "recv failed, received bytes = " << bytes << std::endl;
+            }
+        }
+
+        if (STREAM == 2)
+        {
+            hconcat(img[0], img[1], result);
+        }
+        else if (STREAM == 3)
+        {
+            hconcat(img[0], img[1], img[0]);
+            hconcat(img[0], img[2], result);
+        }
+        else if (STREAM == 4)
+        {
+            hconcat(img[0], img[1], img[0]);
+            hconcat(img[2], img[3], img[2]);
+            vconcat(img[0], img[2], result);
+        }
+        else if (STREAM == 1)
+        {
+            result = img[0];
+        }
+
+        return mat_to_image(result);
+    }
 }
 
 #endif
