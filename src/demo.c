@@ -236,8 +236,8 @@ void demo(char *cfgfile, char *weightfile, float thresh, int cam_index, const ch
 
     srand(2222222);
 
-    char serverIP[STREAM][20] = {"192.168.1.2", "127.0.0.1"};
-    int serverPort[STREAM] = {4099, 4098};
+    char serverIP[STREAM][20] = {"114.70.22.28", "114.70.22.16", "114.70.22.29"};
+    int serverPort[STREAM] = {4001, 4002, 4003};
 
     printf("a\n");
 

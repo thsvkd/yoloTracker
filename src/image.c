@@ -343,7 +343,7 @@ void draw_detections(image im, detection *dets, int num, float thresh, char **na
             int center_x = (right - left) / 2 + left;
             int center_y = (bot - top) / 2 + top;
 
-            if (CAM_NUM == 4)
+            if (CAM_NUM == 4 || STREAM == 4)
             {
                 if (center_x < im.w / 2 && center_y < im.h / 2)
                 {

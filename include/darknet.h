@@ -5,8 +5,8 @@
 #include <string.h>
 #include <pthread.h>
 
-#define CAM_NUM 1
-#define STREAM 2
+#define CAM_NUM 0
+#define STREAM 3
 
 #ifdef GPU
 #define BLOCK 512
