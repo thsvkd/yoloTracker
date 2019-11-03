@@ -25,6 +25,7 @@ extern "C"
     image get_image_from_stream_cus(void **p);
     void get_video_socket(int *sokt, char serverIP[][20], int *serverPort);
     image open_video_stream_cus(int *sokt);
+    void set_box_ROI(image im, int *left, int *right, int *top, int *bot);
 #endif
 
     float get_color(int c, int x, int max);

@@ -6,7 +6,7 @@
 #include <pthread.h>
 
 #define CAM_NUM 0
-#define STREAM 3
+#define STREAM 4
 
 #ifdef GPU
 #define BLOCK 512

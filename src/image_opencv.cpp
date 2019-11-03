@@ -289,6 +289,77 @@ extern "C"
 
         return mat_to_image(result);
     }
+
+    void set_box_ROI(image im, int *left, int *right, int *top, int *bot)
+    {
+        int center_x = ((*right) - (*left)) / 2 + (*left);
+        int center_y = ((*bot) - (*top)) / 2 + (*top);
+
+        if (CAM_NUM == 4 || STREAM == 4)
+        {
+            if (center_x < im.w / 2 && center_y < im.h / 2)
+            {
+                if ((*right) > im.w / 2)
+                    (*right) = im.w / 2 - 1;
+                if ((*bot) > im.h / 2)
+                    (*bot) = im.h / 2 - 1;
+            }
+            else if (center_x >= im.w / 2 && center_y < im.h / 2)
+            {
+                if ((*left) < im.w / 2)
+                    (*left) = im.w / 2;
+                if ((*bot) > im.h / 2)
+                    (*bot) = im.h / 2 - 1;
+            }
+            else if (center_x < im.w / 2 && center_y >= im.h / 2)
+            {
+                if ((*right) > im.w / 2)
+                    (*right) = im.w / 2 - 1;
+                if ((*top) < im.h / 2)
+                    (*top) = im.h / 2;
+            }
+            else if (center_x >= im.w / 2 && center_y >= im.h / 2)
+            {
+                if ((*left) < im.w / 2)
+                    (*left) = im.w / 2;
+                if ((*top) < im.h / 2)
+                    (*top) = im.h / 2;
+            }
+            else if (CAM_NUM == 3 || STREAM == 3)
+            {
+                if (center_x < im.w / 3)
+                {
+                    if ((*right) > im.w / 3)
+                        (*right) = im.w / 3 - 1;
+                }
+                else if (center_x >= im.w / 3 && center_x < im.w / 3 * 2)
+                {
+                    if ((*left) < im.w / 3)
+                        (*left) = im.w / 3;
+                    if ((*right) > im.w / 3 * 2)
+                        (*right) = im.w / 3 * 2 - 1;
+                }
+                else if (center_x >= im.w / 3 * 2)
+                {
+                    if ((*left) < im.w / 3 * 2)
+                        (*left) = im.w / 3 * 2;
+                }
+            }
+            else if (CAM_NUM == 2 || STREAM == 2)
+            {
+                if (center_x < im.w / 2)
+                {
+                    if ((*right) > im.w / 2)
+                        (*right) = im.w / 2 - 1;
+                }
+                else if (center_x >= im.w / 3 && center_x < im.w / 3 * 2)
+                {
+                    if ((*left) < im.w / 2)
+                        (*left) = im.w / 2;
+                }
+            }
+        }
+    }
 }
 
 #endif
