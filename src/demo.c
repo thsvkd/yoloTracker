@@ -241,7 +241,8 @@ void demo(char *cfgfile, char *weightfile, float thresh, int cam_index, const ch
 
     printf("a\n");
 
-    get_video_socket(sokt, serverIP, serverPort);
+    if (STREAM > 0)
+        get_video_socket(sokt, serverIP, serverPort);
     printf("a\n");
 
     int i;
