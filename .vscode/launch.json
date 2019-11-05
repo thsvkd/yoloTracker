@@ -10,14 +10,14 @@
             "name": "g++ build and debug active file",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/home/thsvkd/yoloTracker/darknet",
+            "program": "${workspaceFolder}/darknet",
             "args": [
                 "detector",
                 "demo",
                 "cfg/coco.data",
                 "cfg/yolov2.cfg",
                 "../yoloTracker_res/yolo.weights",
-                "../yoloTracker_res/test3_small.mp4"
+                "../yoloTracker_res/output.mp4"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

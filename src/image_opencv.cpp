@@ -15,6 +15,7 @@
 ////////////////////////////////////////////////////////
 
 using namespace cv;
+using namespace std;
 
 extern "C"
 {
@@ -117,6 +118,7 @@ extern "C"
     {
         VideoCapture *cap = (VideoCapture *)p;
         Mat m;
+        cout << m.cols;
         *cap >> m;
         if (m.empty())
             return make_empty_image(0, 0, 0);

@@ -5,7 +5,7 @@
             "label": "g++ build active file",
             "command": "make",
             "options": {
-                "cwd": "/home/thsvkd/yoloTracker/"
+                "cwd": "${workspaceFolder}"
             },
             "group": {
                 "kind": "build",
