@@ -32,6 +32,12 @@ using namespace cv::xfeatures2d;
 
 typedef struct
 {
+    Scalar box_color;
+    int tag;
+} thing_color;
+
+typedef struct
+{
     float x, y, w, h;
 } box;
 
@@ -55,6 +61,7 @@ public:
     Point p;
     string name;
     Point velocity;
+    Scalar box_color;
     int position;
     int tag;
     int stack_num = 60;
@@ -90,8 +97,9 @@ private:
 public:
     vector<int> pos;
     vector<int> tag;
+    vector<Scalar> thing_color;
 
-    void push_thing(int pos, int tag);
+    void push_thing(int pos, int tag, Scalar box_color);
     vector<int> pop_thing();
     vector<int> still_thing(int poss);
 };
@@ -120,5 +128,6 @@ int get_empty_tag();
 float cal_distance(Point input1, thing_info input2);
 vector<int> get_least_dis_index_list(vector<float> dis_list, float limit);
 //vector<Rect2d> watchdog(Mat frame, vector<thing_info> current_thing);
+Scalar make_random_color();
 
 #endif

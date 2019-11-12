@@ -5,6 +5,7 @@ using namespace cv;
 
 extern int width, height;
 extern quadrant Quadrant;
+extern vector<thing_color> tag_color;
 
 tracking_dot::tracking_dot()
 {
@@ -192,7 +193,7 @@ bool tracking_dot::if_tracker_get_out_screen()
 
         if (p_tmp.x < left && velocity.x < 0)
         {
-            Quadrant.push_thing(3, tag);
+            Quadrant.push_thing(3, tag, box_color);
             return true;
         }
         else if (p_tmp.x > width / 2 - right && velocity.x > 0)
@@ -205,7 +206,7 @@ bool tracking_dot::if_tracker_get_out_screen()
         }
         else if (p_tmp.y > height / 2 - bot && velocity.y > 0)
         {
-            Quadrant.push_thing(3, tag);
+            Quadrant.push_thing(3, tag, box_color);
             return true;
         }
         else
@@ -226,7 +227,7 @@ bool tracking_dot::if_tracker_get_out_screen()
         }
         else if (p_tmp.x > width / 2 - right && velocity.x > 0)
         {
-            Quadrant.push_thing(4, tag);
+            Quadrant.push_thing(4, tag, box_color);
             return true;
         }
         else if (p_tmp.y < top)
@@ -235,7 +236,7 @@ bool tracking_dot::if_tracker_get_out_screen()
         }
         else if (p_tmp.y > height / 2 - bot && velocity.y > 0)
         {
-            Quadrant.push_thing(4, tag);
+            Quadrant.push_thing(4, tag, box_color);
             return true;
         }
         else
@@ -253,12 +254,12 @@ bool tracking_dot::if_tracker_get_out_screen()
 
         if (p_tmp.x < left && velocity.x < 0)
         {
-            Quadrant.push_thing(4, tag); ///여기부분 고쳐라!
+            Quadrant.push_thing(4, tag, box_color); ///여기부분 고쳐라!
             return true;
         }
         else if (p_tmp.x > width / 2 - right && velocity.x > 0)
         {
-            Quadrant.push_thing(1, tag);
+            Quadrant.push_thing(1, tag, box_color);
             return true;
         }
         else if (p_tmp.y < top)
@@ -267,7 +268,7 @@ bool tracking_dot::if_tracker_get_out_screen()
         }
         else if (p_tmp.y > height / 2 - bot && velocity.y > 0)
         {
-            Quadrant.push_thing(1, tag);
+            Quadrant.push_thing(1, tag, box_color);
             return true;
         }
         else
@@ -286,12 +287,12 @@ bool tracking_dot::if_tracker_get_out_screen()
 
         if (p_tmp.x < left && velocity.x < 0)
         {
-            Quadrant.push_thing(2, tag);
+            Quadrant.push_thing(2, tag, box_color);
             return true;
         }
         else if (p_tmp.x > width / 2 - right && velocity.x > 0)
         {
-            Quadrant.push_thing(3, tag);
+            Quadrant.push_thing(3, tag, box_color);
             return true;
         }
         else if (p_tmp.y < top)
@@ -300,7 +301,7 @@ bool tracking_dot::if_tracker_get_out_screen()
         }
         else if (p_tmp.y > height / 2 - bot && velocity.y > 0)
         {
-            Quadrant.push_thing(3, tag);
+            Quadrant.push_thing(3, tag, box_color);
             return true;
         }
         else

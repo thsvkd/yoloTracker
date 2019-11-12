@@ -19,12 +19,13 @@ socklen_t clnt_addr_size;
 
 vector<tracking_dot> trackers_dot;
 quadrant Quadrant;
+vector<thing_color> tag_color;
 
 int width, height;
 
 int main(int argc, char **argv)
 {
-    int s = connect_to_server("192.168.1.6", "8000");
+    int s = connect_to_server("192.168.1.7", "8000");
     string msg;
     char buf[512] = {0};
 
@@ -71,6 +72,10 @@ int main(int argc, char **argv)
                 {
                     if (trackers_dot[i].if_tracker_get_out_screen() || trackers_dot[i].miss_stack > trackers_dot[i].miss_limit)
                     {
+                        thing_color tmp;
+                        tmp.tag = trackers_dot[i].tag;
+                        tmp.box_color = trackers_dot[i].box_color;
+                        tag_color.push_back(tmp);
                         trackers_dot.erase(trackers_dot.begin() + i);
                         i--;
                         cout << i << " tracker_dot deleted" << endl;
@@ -98,6 +103,7 @@ int main(int argc, char **argv)
                     tmp.tag = get_empty_tag();
                     tmp.is_missed = false;
                     tmp.what_quadrant_am_i();
+                    tmp.box_color = make_random_color();
 
                     for (int i = 0; i < Quadrant.pos.size(); i++)
                     {
@@ -107,6 +113,12 @@ int main(int argc, char **argv)
                             tmp.tag = tmp2[1];
                             break;
                         }
+                    }
+
+                    for (int i = 0; i < tag_color.size(); i++)
+                    {
+                        if (tag_color[i].tag = trackers_dot[i].tag)
+                            tmp.box_color = tag_color[i].box_color;
                     }
 
                     trackers_dot.push_back(tmp);
@@ -121,30 +133,30 @@ int main(int argc, char **argv)
             {
                 if (!trackers_dot[i].is_missed)
                 {
-                    rectangle(frame, box_to_Rect2d(trackers_dot[i].bbox), Scalar(255, 0, 0), 2, 1);
-                    circle(frame, trackers_dot[i].p, 2, Scalar(255, 0, 0), -1);                             //for debug
-                    circle(frame, trackers_dot[i].p, trackers_dot[i].distance_limit, Scalar(255, 0, 0), 2); //for debug
-                    circle(frame, trackers_dot[i].predict_next_point(), 2, Scalar(0, 0, 255), -1);          //for debug
+                    rectangle(frame, box_to_Rect2d(trackers_dot[i].bbox), trackers_dot[i].box_color, 2, 1);
+                    //circle(frame, trackers_dot[i].p, 2, Scalar(255, 0, 0), -1);                             //for debug
+                    //circle(frame, trackers_dot[i].p, trackers_dot[i].distance_limit, Scalar(255, 0, 0), 2); //for debug
+                    //circle(frame, trackers_dot[i].predict_next_point(), 2, Scalar(0, 0, 255), -1);          //for debug
                     putText(frame,
                             to_string(trackers_dot[i].tag),
                             Point(trackers_dot[i].bbox.x * width, trackers_dot[i].bbox.y * height),
                             2,
                             1,
-                            Scalar(255, 0, 0));
+                            trackers_dot[i].box_color);
                 }
-                else
-                {
-                    rectangle(frame, box_to_Rect2d(trackers_dot[i].bbox), Scalar(0, 255, 0), 2, 1);
-                    circle(frame, trackers_dot[i].p, 2, Scalar(0, 255, 0), -1);                             //for debug
-                    circle(frame, trackers_dot[i].p, trackers_dot[i].distance_limit, Scalar(0, 255, 0), 2); //for debug
-                    circle(frame, trackers_dot[i].predict_next_point(), 2, Scalar(0, 0, 255), -1);          //for debug
-                    putText(frame,
-                            to_string(trackers_dot[i].tag) + "miss stack = " + to_string(trackers_dot[i].miss_stack),
-                            Point(trackers_dot[i].bbox.x * width, trackers_dot[i].bbox.y * height),
-                            2,
-                            1,
-                            Scalar(0, 255, 0));
-                }
+                // else
+                // {
+                //     rectangle(frame, box_to_Rect2d(trackers_dot[i].bbox), Scalar(0, 255, 0), 2, 1);
+                //     circle(frame, trackers_dot[i].p, 2, Scalar(0, 255, 0), -1);                             //for debug
+                //     circle(frame, trackers_dot[i].p, trackers_dot[i].distance_limit, Scalar(0, 255, 0), 2); //for debug
+                //     circle(frame, trackers_dot[i].predict_next_point(), 2, Scalar(0, 0, 255), -1);          //for debug
+                //     putText(frame,
+                //             to_string(trackers_dot[i].tag) + "miss stack = " + to_string(trackers_dot[i].miss_stack),
+                //             Point(trackers_dot[i].bbox.x * width, trackers_dot[i].bbox.y * height),
+                //             2,
+                //             1,
+                //             Scalar(0, 255, 0));
+                // }
             }
             cout << "draw box start" << endl;
             msg = make_msg(); //이 함수 나중에 고쳐야함!!!!!! comment
@@ -435,6 +447,28 @@ vector<int> get_least_dis_index_list(vector<float> dis_list, float limit)
     }
 
     return result;
+}
+
+Scalar make_random_color()
+{
+    srand((unsigned int)clock());
+    int i = 0;
+    int r = rand() % 256;
+    while (i++ != 10)
+    {
+    }
+    i = 0;
+    int g = rand() % 256;
+    while (i++ != 10)
+    {
+    }
+    int b = rand() % 256;
+
+    return Scalar(r, g, b);
+}
+
+Scalar get_thing_color()
+{
 }
 
 // vector<Rect2d> watchdog(Mat frame, vector<thing_info> current_thing)
