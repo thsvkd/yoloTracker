@@ -5,7 +5,7 @@
             "label": "g++ build active file",
             "command": "make clean; make",
             "options": {
-                "cwd": "/home/thsvkd/yoloTracker/opencv_tracker/"
+                "cwd": "${workspaceFolder}"
             },
             "group": {
                 "kind": "build",

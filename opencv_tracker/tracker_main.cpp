@@ -17,16 +17,14 @@ struct sockaddr_in clntaddr;
 int addrlen = sizeof(servaddr); //서버 주소의 size를 저장
 socklen_t clnt_addr_size;
 
-vector<thing_info> things(THING_NUM * 2);
-Ptr<Tracker> trackers[THING_NUM];
 vector<tracking_dot> trackers_dot;
-vector<int> tag_table;
+quadrant Quadrant;
 
 int width, height;
 
 int main(int argc, char **argv)
 {
-    int s = connect_to_server("192.168.1.4", "8000");
+    int s = connect_to_server("192.168.1.6", "8000");
     string msg;
     char buf[512] = {0};
 
@@ -61,14 +59,22 @@ int main(int argc, char **argv)
             {
                 cout << i << "trackers_dot update start" << endl;
                 int flag = trackers_dot[i].update_dot(frame, current_thing);
+                if (trackers_dot[i].bbox.h > trackers_dot[i].bbox.w)
+                    trackers_dot[i].distance_limit = trackers_dot[i].bbox.h * height / 2;
+                else
+                    trackers_dot[i].distance_limit = trackers_dot[i].bbox.w * width / 2;
 
                 if (flag != -1)
                     current_thing[flag].hit = 1;
-                if (trackers_dot[i].miss_stack > 20)
+                //trackers_dot[i].miss_stack > trackers_dot[i].miss_limit
+                if (trackers_dot[i].is_missed)
                 {
-                    trackers_dot.erase(trackers_dot.begin() + i);
-                    i--;
-                    cout << i << " tracker_dot deleted" << endl;
+                    if (trackers_dot[i].if_tracker_get_out_screen() || trackers_dot[i].miss_stack > trackers_dot[i].miss_limit)
+                    {
+                        trackers_dot.erase(trackers_dot.begin() + i);
+                        i--;
+                        cout << i << " tracker_dot deleted" << endl;
+                    }
                 }
             }
             cout << "update_dot end" << endl;
@@ -80,13 +86,29 @@ int main(int argc, char **argv)
                 {
                     tracking_dot tmp;
                     tmp.bbox = current_thing[i].bbox;
-                    tmp.stack_point = vector<Point>(10, Point(-1, -1));
+                    if (tmp.bbox.h > tmp.bbox.w)
+                        tmp.distance_limit = tmp.bbox.h * height / 2;
+                    else
+                        tmp.distance_limit = tmp.bbox.w * width / 2;
+                    tmp.stack_point = vector<Point>(60, Point(-1, -1));
                     tmp.im = current_thing[i].im;
                     tmp.p = cal_center_point(current_thing[i].bbox);
                     tmp.name = current_thing[i].name;
                     tmp.velocity = Point(0, 0);
                     tmp.tag = get_empty_tag();
                     tmp.is_missed = false;
+                    tmp.what_quadrant_am_i();
+
+                    for (int i = 0; i < Quadrant.pos.size(); i++)
+                    {
+                        if (tmp.position == Quadrant.pos[i])
+                        {
+                            vector<int> tmp2 = Quadrant.still_thing(i);
+                            tmp.tag = tmp2[1];
+                            break;
+                        }
+                    }
+
                     trackers_dot.push_back(tmp);
                     trackers_dot[trackers_dot.size() - 1].put_point_to_stack(tmp.p);
                     current_thing[i].hit = 1;
@@ -100,9 +122,9 @@ int main(int argc, char **argv)
                 if (!trackers_dot[i].is_missed)
                 {
                     rectangle(frame, box_to_Rect2d(trackers_dot[i].bbox), Scalar(255, 0, 0), 2, 1);
-                    circle(frame, trackers_dot[i].p, 2, Scalar(255, 0, 0), -1);                    //for debug
-                    circle(frame, trackers_dot[i].p, 200, Scalar(255, 0, 0), 2);                   //for debug
-                    circle(frame, trackers_dot[i].predict_next_point(), 2, Scalar(0, 0, 255), -1); //for debug
+                    circle(frame, trackers_dot[i].p, 2, Scalar(255, 0, 0), -1);                             //for debug
+                    circle(frame, trackers_dot[i].p, trackers_dot[i].distance_limit, Scalar(255, 0, 0), 2); //for debug
+                    circle(frame, trackers_dot[i].predict_next_point(), 2, Scalar(0, 0, 255), -1);          //for debug
                     putText(frame,
                             to_string(trackers_dot[i].tag),
                             Point(trackers_dot[i].bbox.x * width, trackers_dot[i].bbox.y * height),
@@ -113,13 +135,11 @@ int main(int argc, char **argv)
                 else
                 {
                     rectangle(frame, box_to_Rect2d(trackers_dot[i].bbox), Scalar(0, 255, 0), 2, 1);
-                    circle(frame, trackers_dot[i].p, 2, Scalar(0, 255, 0), -1);                    //for debug
-                    circle(frame, trackers_dot[i].p, 200, Scalar(0, 255, 0), 2);                   //for debug
-                    circle(frame, trackers_dot[i].predict_next_point(), 2, Scalar(0, 0, 255), -1); //for debug
+                    circle(frame, trackers_dot[i].p, 2, Scalar(0, 255, 0), -1);                             //for debug
+                    circle(frame, trackers_dot[i].p, trackers_dot[i].distance_limit, Scalar(0, 255, 0), 2); //for debug
+                    circle(frame, trackers_dot[i].predict_next_point(), 2, Scalar(0, 0, 255), -1);          //for debug
                     putText(frame,
-                            to_string(trackers_dot[i].tag) +
-                                "miss stack = " +
-                                to_string(trackers_dot[i].miss_stack),
+                            to_string(trackers_dot[i].tag) + "miss stack = " + to_string(trackers_dot[i].miss_stack),
                             Point(trackers_dot[i].bbox.x * width, trackers_dot[i].bbox.y * height),
                             2,
                             1,
@@ -131,6 +151,8 @@ int main(int argc, char **argv)
             sendMessage(s, msg.c_str());
             msg = "";
             make_txt(file);
+
+            imwrite("debug_img/debug_img_" + string(file[0][5]) + ".jpg", frame);
         }
 
         imshow("Tracker", frame);
@@ -347,12 +369,6 @@ vector<thing_info> file_to_box(Mat im, vector<vector<string>> file)
     return result;
 }
 
-void init_mosse_tracker()
-{
-    for (int i = 0; i < THING_NUM; i++)
-        trackers[i] = TrackerMOSSE::create();
-}
-
 int get_empty_tag()
 {
     srand((unsigned int)clock());
@@ -395,15 +411,6 @@ int get_empty_tag()
 
 //     return bbox;
 // }
-
-int get_MAX_index_of_things()
-{
-    for (int i = THING_NUM - 1; i >= 0; i--)
-    {
-        if (things[i].tag != -1)
-            return i;
-    }
-}
 
 float cal_distance(Point input1, thing_info input2)
 {

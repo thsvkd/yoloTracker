@@ -55,11 +55,16 @@ public:
     Point p;
     string name;
     Point velocity;
+    int position;
     int tag;
-    int stack_num = 30;
+    int stack_num = 60;
     int miss_stack = 0;
     bool is_missed = false;
     bool is_mosse_updated = false;
+    bool is_get_stacked = false;
+    float score_limit = 5;
+    float distance_limit = 50;
+    int miss_limit = 30;
 
     tracking_dot();
     tracking_dot(Point pp);
@@ -75,6 +80,20 @@ public:
     int which_thing_is_my_thing(vector<thing_info> current_thing, int distance_limit, int score_limit);
     int update_dot(Mat frame, vector<thing_info> current_thing);
     bool mosse_update(Mat frame);
+    bool if_tracker_get_out_screen();
+    int what_quadrant_am_i();
+};
+
+class quadrant
+{
+private:
+public:
+    vector<int> pos;
+    vector<int> tag;
+
+    void push_thing(int pos, int tag);
+    vector<int> pop_thing();
+    vector<int> still_thing(int poss);
 };
 
 float doublecalcAngleFromPoints(Point2f _ptFirstPos, Point2f _ptSecondPos);
@@ -95,11 +114,9 @@ vector<vector<string>> read_txt(string file_path);
 Rect2d box_to_Rect2d(box bbox);
 box Rect2d_to_box(Rect2d rect2d);
 vector<thing_info> file_to_box(Mat im, vector<vector<string>> file);
-void init_mosse_tracker();
 int get_empty_tag();
 //Rect2d mosse_tracker_update(Mat frame, int tag);
 //Rect2d mosse_tracker_show(Mat frame, int tag);
-int get_MAX_index_of_things();
 float cal_distance(Point input1, thing_info input2);
 vector<int> get_least_dis_index_list(vector<float> dis_list, float limit);
 //vector<Rect2d> watchdog(Mat frame, vector<thing_info> current_thing);

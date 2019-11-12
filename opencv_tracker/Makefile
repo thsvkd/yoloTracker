@@ -8,7 +8,7 @@ OPTS=-O0 -g
 endif
 
 tracker: 
-	$(CXX) $(OPTS) -o tracker tracker_main.cpp orb.cpp tracking_dot.cpp tracker.h $(OPENCV)
+	$(CXX) $(OPTS) -o tracker tracker_main.cpp orb.cpp tracking_dot.cpp quadrant.cpp tracker.h $(OPENCV)
 
 clean:
 	rm tracker

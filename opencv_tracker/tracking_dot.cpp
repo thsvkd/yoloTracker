@@ -4,6 +4,7 @@ using namespace std;
 using namespace cv;
 
 extern int width, height;
+extern quadrant Quadrant;
 
 tracking_dot::tracking_dot()
 {
@@ -124,11 +125,9 @@ int tracking_dot::which_thing_is_my_thing(vector<thing_info> current_thing, int 
         return -1;
 }
 
+//this func update tracking_dot's state
 int tracking_dot::update_dot(Mat frame, vector<thing_info> current_thing)
 {
-    float score_limit = 5;
-    float distance_limit = 200;
-
     int flag = which_thing_is_my_thing(current_thing, distance_limit, score_limit);
     //일치하는 물체의 current_thing 인덱스를 반환
 
@@ -153,7 +152,7 @@ int tracking_dot::update_dot(Mat frame, vector<thing_info> current_thing)
         miss_stack = 0;
         velocity = cal_v();
     }
-    else
+    else //miss
     {
         p = predict_next_point();
         bbox.x = (float)p.x / (float)width - bbox.w / 2;
@@ -173,4 +172,160 @@ bool tracking_dot::mosse_update(Mat frame)
     bbox = Rect2d_to_box(tmp);
 
     return is_mosse_updated;
+}
+
+bool tracking_dot::if_tracker_get_out_screen()
+{
+    Point p_tmp = p;
+    int left;
+    int right;
+    int top;
+    int bot;
+
+    if (position == 1)
+    {
+        p_tmp.x -= width / 2;
+        left = 20;
+        right = 0;
+        top = 0;
+        bot = 20;
+
+        if (p_tmp.x < left && velocity.x < 0)
+        {
+            Quadrant.push_thing(3, tag);
+            return true;
+        }
+        else if (p_tmp.x > width / 2 - right && velocity.x > 0)
+        {
+            return true;
+        }
+        else if (p_tmp.y < top)
+        {
+            return true;
+        }
+        else if (p_tmp.y > height / 2 - bot && velocity.y > 0)
+        {
+            Quadrant.push_thing(3, tag);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    else if (position == 2)
+    {
+        left = 0;
+        right = 20;
+        top = 0;
+        bot = 20;
+
+        if (p_tmp.x < left)
+        {
+            return true;
+        }
+        else if (p_tmp.x > width / 2 - right && velocity.x > 0)
+        {
+            Quadrant.push_thing(4, tag);
+            return true;
+        }
+        else if (p_tmp.y < top)
+        {
+            return true;
+        }
+        else if (p_tmp.y > height / 2 - bot && velocity.y > 0)
+        {
+            Quadrant.push_thing(4, tag);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    else if (position == 3)
+    {
+        p_tmp.y -= height / 2;
+        left = 20;
+        right = 20;
+        top = 0;
+        bot = 20;
+
+        if (p_tmp.x < left && velocity.x < 0)
+        {
+            Quadrant.push_thing(4, tag); ///여기부분 고쳐라!
+            return true;
+        }
+        else if (p_tmp.x > width / 2 - right && velocity.x > 0)
+        {
+            Quadrant.push_thing(1, tag);
+            return true;
+        }
+        else if (p_tmp.y < top)
+        {
+            return true;
+        }
+        else if (p_tmp.y > height / 2 - bot && velocity.y > 0)
+        {
+            Quadrant.push_thing(1, tag);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    else if (position == 4)
+    {
+        p_tmp.x -= width / 2;
+        p_tmp.y -= height / 2;
+        left = 20;
+        right = 60;
+        top = 0;
+        bot = 50;
+
+        if (p_tmp.x < left && velocity.x < 0)
+        {
+            Quadrant.push_thing(2, tag);
+            return true;
+        }
+        else if (p_tmp.x > width / 2 - right && velocity.x > 0)
+        {
+            Quadrant.push_thing(3, tag);
+            return true;
+        }
+        else if (p_tmp.y < top)
+        {
+            return true;
+        }
+        else if (p_tmp.y > height / 2 - bot && velocity.y > 0)
+        {
+            Quadrant.push_thing(3, tag);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+}
+
+int tracking_dot::what_quadrant_am_i()
+{
+    if (p.x < width / 2)
+    {
+        if (p.y < height / 2)
+            position = 2;
+        else
+            position = 3;
+    }
+    else
+    {
+        if (p.y < height / 2)
+            position = 1;
+        else
+            position = 4;
+    }
+
+    return position;
 }

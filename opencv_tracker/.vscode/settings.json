@@ -12,6 +12,9 @@
         "string_view": "cpp",
         "vector": "cpp",
         "initializer_list": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "deque": "cpp",
+        "list": "cpp",
+        "unordered_map": "cpp"
     }
 }
