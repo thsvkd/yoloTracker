@@ -25,7 +25,7 @@ int width, height;
 
 int main(int argc, char **argv)
 {
-    int s = connect_to_server("192.168.1.7", "8000");
+    int s = connect_to_server("203.252.139.188", "8000");
     string msg;
     char buf[512] = {0};
 
@@ -164,7 +164,7 @@ int main(int argc, char **argv)
             msg = "";
             make_txt(file);
 
-            imwrite("debug_img/debug_img_" + string(file[0][5]) + ".jpg", frame);
+            //imwrite("debug_img/debug_img_" + string(file[0][5]) + ".jpg", frame);
         }
 
         imshow("Tracker", frame);

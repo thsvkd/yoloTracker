@@ -15,8 +15,8 @@
                 "detector",
                 "demo",
                 "cfg/coco.data",
-                "cfg/yolov2.cfg",
-                "../yoloTracker_res/yolo.weights" //,
+                "cfg/yolov3.cfg",
+                "../yoloTracker_res/yolov3.weights" //,
                 //"../yoloTracker_res/output.mp4"
             ],
             "stopAtEntry": false,

@@ -375,13 +375,27 @@ void draw_detections(image im, detection *dets, int num, float thresh, char **na
                 }
             }
 
-            draw_box_width(im, left, top, right, bot, width, red, green, blue);
-            if (alphabet)
+            if (bot - top < im.h / 4 || right - left < im.w / 4)
             {
-                image label = get_label(alphabet, labelstr, (im.h * .03));
-                draw_label(im, top + width, left, label, rgb);
-                free_image(label);
+                draw_box_width(im, left, top, right, bot, width, red, green, blue);
+                if (alphabet)
+                {
+                    image label = get_label(alphabet, labelstr, (im.h * .03));
+                    draw_label(im, top + width, left, label, rgb);
+                    free_image(label);
+                }
+                if (!strcmp(labelstr, name_filter[0]))
+                {
+                    sprintf(tmp, "%s %.3f %.3f %.3f %.3f\n",
+                            labelstr,
+                            (float)left / im.w,
+                            (float)top / im.h,
+                            (float)(right - left) / im.w,
+                            (float)(bot - top) / im.h);
+                    strcat(out, tmp);
+                }
             }
+
             if (dets[i].mask)
             {
                 image mask = float_to_image(14, 14, 1, dets[i].mask);
@@ -391,17 +405,6 @@ void draw_detections(image im, detection *dets, int num, float thresh, char **na
                 free_image(mask);
                 free_image(resized_mask);
                 free_image(tmask);
-            }
-
-            if (!strcmp(labelstr, name_filter[0]))
-            {
-                sprintf(tmp, "%s %.3f %.3f %.3f %.3f\n",
-                        labelstr,
-                        (float)left / im.w,
-                        (float)top / im.h,
-                        (float)(right - left) / im.w,
-                        (float)(bot - top) / im.h);
-                strcat(out, tmp);
             }
         }
     }
