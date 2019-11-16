@@ -12,8 +12,8 @@ To make this possible, we used various methods such as ORB feature matching, his
 
 Our system consists of two algorithms.
 
-###1. one view object tracker.
-###2. muti view object tracker.
+1. one view object tracker.
+2. muti view object tracker.
 
 
 
