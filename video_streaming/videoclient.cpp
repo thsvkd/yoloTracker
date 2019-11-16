@@ -12,10 +12,6 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
-
-    //--------------------------------------------------------
-    //networking stuff: socket , connect
-    //--------------------------------------------------------
     int sokt;
     char *serverIP;
     int serverPort;
@@ -45,10 +41,6 @@ int main(int argc, char **argv)
         std::cerr << "connect() failed!" << std::endl;
     }
 
-    //----------------------------------------------------------
-    //OpenCV Code
-    //----------------------------------------------------------
-
     Mat img;
     vector<uchar> buff;
     img = Mat::zeros(HEIGHT, WIDTH, CV_8UC3);
@@ -56,13 +48,12 @@ int main(int argc, char **argv)
     int bytes = 0;
     int key;
 
-    //make img continuos
     if (!img.isContinuous())
     {
         img = img.clone();
     }
 
-    std::cout << "Image Size:" << imgSize << std::endl;
+    //std::cout << "Image Size:" << imgSize << std::endl;
 
     namedWindow("CV Video Client", 1);
 

@@ -18,15 +18,13 @@ void *display(void *);
 
 int capDev = 0;
 
-VideoCapture cap(capDev); // open the default camera
+VideoCapture cap(capDev);
 
 int main(int argc, char **argv)
 {
-    cap.set(CV_CAP_PROP_FRAME_WIDTH, 640);
-    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
-    //--------------------------------------------------------
-    //networking stuff: socket, bind, listen
-    //--------------------------------------------------------
+    cap.set(CV_CAP_PROP_FRAME_WIDTH, WIDTH);
+    cap.set(CV_CAP_PROP_FRAME_HEIGHT, HEIGHT);
+
     int localSocket,
         remoteSocket,
         port = 4097;
@@ -72,7 +70,6 @@ int main(int argc, char **argv)
     std::cout << "Waiting for connections...\n"
               << "Server Port:" << port << std::endl;
 
-    //accept connection from an incoming client
     while (1)
     {
         //if (remoteSocket < 0) {
@@ -101,8 +98,6 @@ int main(int argc, char **argv)
 void *display(void *ptr)
 {
     int socket = *(int *)ptr;
-    //OpenCV Code
-    //----------------------------------------------------------
 
     vector<uchar> buff;
     vector<int> param = vector<int>(2);
@@ -110,7 +105,6 @@ void *display(void *ptr)
     param[1] = 95;
     Mat img = Mat::zeros(HEIGHT, WIDTH, CV_8UC3);
 
-    //mtake it continuous
     if (!img.isContinuous())
     {
         img = img.clone();
@@ -118,26 +112,14 @@ void *display(void *ptr)
 
     int bytes = 0;
 
-    //make img continuos
-    if (!img.isContinuous())
-    {
-        //img = img.clone();
-        //imgGray = img.clone();
-    }
-
     //std::cout << "Image Size:" << imgSize << std::endl;
 
     while (1)
     {
-
-        /* get a frame from camera */
         cap >> img;
         imencode(".jpg", img, buff, param);
         int imgSize = buff.size();
-        //do video processing here
-        // cvtColor(img, imgGray, CV_BGR2GRAY);
 
-        //send processed image
         if ((bytes = send(socket, &imgSize, sizeof(imgSize), 0)) < 0)
         {
             std::cerr << "bytes = " << bytes << std::endl;
