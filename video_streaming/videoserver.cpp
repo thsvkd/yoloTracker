@@ -6,8 +6,13 @@
 #include <net/if.h>
 #include <unistd.h>
 #include <string.h>
+#include <vector>
+
+#define WIDTH 640
+#define HEIGHT 480
 
 using namespace cv;
+using namespace std;
 
 void *display(void *);
 
@@ -99,17 +104,19 @@ void *display(void *ptr)
     //OpenCV Code
     //----------------------------------------------------------
 
-    Mat img, imgGray;
-    img = Mat::zeros(480, 640, CV_8UC3);
-    //make it continuous
+    vector<uchar> buff;
+    vector<int> param = vector<int>(2);
+    param[0] = CV_IMWRITE_JPEG_QUALITY;
+    param[1] = 95;
+    Mat img = Mat::zeros(HEIGHT, WIDTH, CV_8UC3);
+
+    //mtake it continuous
     if (!img.isContinuous())
     {
         img = img.clone();
     }
 
-    int imgSize = img.total() * img.elemSize();
     int bytes = 0;
-    int key;
 
     //make img continuos
     if (!img.isContinuous())
@@ -118,19 +125,26 @@ void *display(void *ptr)
         //imgGray = img.clone();
     }
 
-    std::cout << "Image Size:" << imgSize << std::endl;
+    //std::cout << "Image Size:" << imgSize << std::endl;
 
     while (1)
     {
 
         /* get a frame from camera */
         cap >> img;
-
+        imencode(".jpg", img, buff, param);
+        int imgSize = buff.size();
         //do video processing here
         // cvtColor(img, imgGray, CV_BGR2GRAY);
 
         //send processed image
-        if ((bytes = send(socket, img.data, imgSize, 0)) < 0)
+        if ((bytes = send(socket, &imgSize, sizeof(imgSize), 0)) < 0)
+        {
+            std::cerr << "bytes = " << bytes << std::endl;
+            break;
+        }
+
+        if ((bytes = send(socket, buff.data(), imgSize, 0)) < 0)
         {
             std::cerr << "bytes = " << bytes << std::endl;
             break;

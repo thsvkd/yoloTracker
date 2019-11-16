@@ -2,8 +2,13 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <vector>
+
+#define WIDTH 640
+#define HEIGHT 480
 
 using namespace cv;
+using namespace std;
 
 int main(int argc, char **argv)
 {
@@ -45,9 +50,9 @@ int main(int argc, char **argv)
     //----------------------------------------------------------
 
     Mat img;
-    img = Mat::zeros(480, 640, CV_8UC3);
-    int imgSize = img.total() * img.elemSize();
-    uchar *iptr = img.data;
+    vector<uchar> buff;
+    img = Mat::zeros(HEIGHT, WIDTH, CV_8UC3);
+    int imgSize;
     int bytes = 0;
     int key;
 
@@ -64,10 +69,18 @@ int main(int argc, char **argv)
     while (key != 'q')
     {
 
-        if ((bytes = recv(sokt, iptr, imgSize, MSG_WAITALL)) == -1)
+        if ((bytes = recv(sokt, &imgSize, sizeof(imgSize), MSG_WAITALL)) == -1)
         {
             std::cerr << "recv failed, received bytes = " << bytes << std::endl;
         }
+        buff.resize(imgSize);
+
+        if ((bytes = recv(sokt, buff.data(), imgSize, MSG_WAITALL)) == -1)
+        {
+            std::cerr << "recv failed, received bytes = " << bytes << std::endl;
+        }
+
+        img = imdecode(Mat(buff), 1);
 
         cv::imshow("CV Video Client", img);
 
