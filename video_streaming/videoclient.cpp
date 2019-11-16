@@ -4,8 +4,8 @@
 #include <unistd.h>
 #include <vector>
 
-#define WIDTH 640
-#define HEIGHT 480
+#define WIDTH 1280
+#define HEIGHT 960
 
 using namespace cv;
 using namespace std;
@@ -43,7 +43,7 @@ int main(int argc, char **argv)
 
     Mat img;
     vector<uchar> buff;
-    img = Mat::zeros(HEIGHT, WIDTH, CV_8UC3);
+    //img = Mat::zeros(HEIGHT, WIDTH, CV_8UC3);
     int imgSize;
     int bytes = 0;
     int key;
