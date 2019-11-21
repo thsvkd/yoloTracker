@@ -3,9 +3,12 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <vector>
+<<<<<<< HEAD
+=======
 
 #define WIDTH 1280
 #define HEIGHT 960
+>>>>>>> 4030b4e4aaf165a59a0bb7a2f51ae1e201bcda58
 
 using namespace cv;
 using namespace std;
@@ -42,9 +45,15 @@ int main(int argc, char **argv)
     }
 
     Mat img;
+<<<<<<< HEAD
+    img = Mat::zeros(480, 640, CV_8UC3);
+    int imgSize;
+    uchar *iptr = img.data;
+=======
     vector<uchar> buff;
     //img = Mat::zeros(HEIGHT, WIDTH, CV_8UC3);
     int imgSize;
+>>>>>>> 4030b4e4aaf165a59a0bb7a2f51ae1e201bcda58
     int bytes = 0;
     int key;
 
@@ -56,9 +65,13 @@ int main(int argc, char **argv)
     //std::cout << "Image Size:" << imgSize << std::endl;
 
     namedWindow("CV Video Client", 1);
+    vector<uchar> rev_img;
 
     while (key != 'q')
     {
+<<<<<<< HEAD
+        if ((bytes = recv(sokt, &imgSize, sizeof(imgSize), MSG_WAITALL)) == -1)
+=======
 
         if ((bytes = recv(sokt, &imgSize, sizeof(imgSize), MSG_WAITALL)) == -1)
         {
@@ -67,12 +80,22 @@ int main(int argc, char **argv)
         buff.resize(imgSize);
 
         if ((bytes = recv(sokt, buff.data(), imgSize, MSG_WAITALL)) == -1)
+>>>>>>> 4030b4e4aaf165a59a0bb7a2f51ae1e201bcda58
         {
             std::cerr << "recv failed, received bytes = " << bytes << std::endl;
         }
+        rev_img.resize(imgSize);
 
+<<<<<<< HEAD
+        if ((bytes = recv(sokt, rev_img.data(), imgSize, MSG_WAITALL)) == -1)
+        {
+            std::cerr << "recv failed, received bytes = " << bytes << std::endl;
+        }
+        img = imdecode(Mat(rev_img), CV_LOAD_IMAGE_COLOR);
+=======
         img = imdecode(Mat(buff), 1);
 
+>>>>>>> 4030b4e4aaf165a59a0bb7a2f51ae1e201bcda58
         cv::imshow("CV Video Client", img);
 
         if (key = cv::waitKey(10) >= 0)
