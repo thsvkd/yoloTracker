@@ -3,6 +3,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <vector>
+#include <omp.h>
 
 using namespace cv;
 using namespace std;
@@ -68,6 +69,8 @@ int main(int argc, char **argv)
     imageROI[3] = Mat(result, Rect(640, 480, 640, 480));
 
     cout << "while loop start" << endl;
+
+    omp_set_num_threads(4);
 
     while (key != 'q')
     {
