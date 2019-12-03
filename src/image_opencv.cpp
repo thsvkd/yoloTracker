@@ -4,6 +4,7 @@
 #include "stdlib.h"
 #include "opencv2/opencv.hpp"
 #include "image.h"
+#include "omp.h"
 
 ///////////////////////////////////////////////////////
 // this part is edited by Sung Hun //////////////
@@ -16,6 +17,9 @@
 
 using namespace cv;
 using namespace std;
+
+Mat result;
+Mat img[STREAM] = {Mat::zeros(480, 640, CV_8UC3), Mat::zeros(480, 640, CV_8UC3), Mat::zeros(480, 640, CV_8UC3), Mat::zeros(480, 640, CV_8UC3)};
 
 extern "C"
 {
@@ -251,21 +255,54 @@ extern "C"
 
     image open_video_stream_cus(int *sokt)
     {
-        Mat result;
-        Mat img[STREAM];
+        vector<uchar> buff[4];
+        int imgSize[4];
+        int bytes[4] = {0};
 
-        for (int i = 0; i < STREAM; i++)
+#pragma omp parallel
         {
-            img[i] = Mat::zeros(480, 640, CV_8UC3);
-            int imgSize = img[i].total() * img[i].elemSize();
-            uchar *iptr = img[i].data;
-            int bytes = 0;
-
-            std::cout << "Image Size:" << imgSize << std::endl;
-
-            if ((bytes = recv(sokt[i], iptr, imgSize, MSG_WAITALL)) == -1)
+            for (int i = 0; i < STREAM; i++)
             {
-                std::cerr << "recv failed, received bytes = " << bytes << std::endl;
+                if (i % 2 == 0)
+                {
+#pragma omp for
+                    for (int j = 0; j < STREAM; j += 2)
+                    {
+                        if ((bytes[j] = recv(sokt[j], &imgSize[j], sizeof(imgSize[j]), MSG_WAITALL)) == -1)
+                        {
+                            std::cerr << "recv failed, received bytes[j] = " << bytes[j] << std::endl;
+                        }
+                        std::cout << "Image Size:" << imgSize[j] << std::endl;
+                        buff[j].resize(imgSize[j]);
+
+                        if ((bytes[j] = recv(sokt[j], buff[j].data(), imgSize[j], MSG_WAITALL)) == -1)
+                        {
+                            std::cerr << "recv failed, received bytes[j] = " << bytes[j] << std::endl;
+                        }
+
+                        img[j] = imdecode(Mat(buff[j]), 1);
+                    }
+                }
+                else
+                {
+#pragma omp for
+                    for (int j = 1; j < STREAM; j += 2)
+                    {
+                        if ((bytes[j] = recv(sokt[j], &imgSize[j], sizeof(imgSize[j]), MSG_WAITALL)) == -1)
+                        {
+                            std::cerr << "recv failed, received bytes[j] = " << bytes[j] << std::endl;
+                        }
+                        std::cout << "Image Size:" << imgSize[j] << std::endl;
+                        buff[j].resize(imgSize[j]);
+
+                        if ((bytes[j] = recv(sokt[j], buff[j].data(), imgSize[j], MSG_WAITALL)) == -1)
+                        {
+                            std::cerr << "recv failed, received bytes[j] = " << bytes[j] << std::endl;
+                        }
+
+                        img[j] = imdecode(Mat(buff[j]), 1);
+                    }
+                }
             }
         }
 

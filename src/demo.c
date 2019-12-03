@@ -1,3 +1,4 @@
+
 #include "network.h"
 #include "detection_layer.h"
 #include "region_layer.h"
@@ -236,8 +237,8 @@ void demo(char *cfgfile, char *weightfile, float thresh, int cam_index, const ch
 
     srand(2222222);
 
-    char serverIP[STREAM][20] = {"203.252.139.188", "203.252.139.188", "203.252.139.188", "203.252.139.188"};
-    int serverPort[STREAM] = {5001, 5002, 5003, 5004};
+    char serverIP[STREAM][20] = {"192.168.11.12", "192.168.11.13", "192.168.11.14", "192.168.11.15"};
+    int serverPort[STREAM] = {5002, 5001, 5003, 5004};
 
     printf("a\n");
 
