@@ -15,18 +15,18 @@ yoloTracker는 **Darknet(YOLO)** 을 기반으로, 이 저장소에서 추가한
 - 결과적으로 단순 검출이 아니라 **“같은 사람/같은 물체를 계속 같은 ID로 관리”** 하는 흐름을 목표로 합니다.
 
 관련 파일:
-- `/home/runner/work/yoloTracker/yoloTracker/opencv_tracker/tracker_main.cpp`
-- `/home/runner/work/yoloTracker/yoloTracker/opencv_tracker/tracking_dot.cpp`
-- `/home/runner/work/yoloTracker/yoloTracker/opencv_tracker/orb.cpp`
-- `/home/runner/work/yoloTracker/yoloTracker/opencv_tracker/tracker.h`
+- `opencv_tracker/tracker_main.cpp`
+- `opencv_tracker/tracking_dot.cpp`
+- `opencv_tracker/orb.cpp`
+- `opencv_tracker/tracker.h`
 
 ### 2. MOSSE 기반 경량 추적 버전 분리
 - `opencv_tracker_mosse/`는 보다 단순한 **MOSSE 중심 추적기**입니다.
 - 동일한 `out.txt`, `out.jpg` 기반으로 동작하지만, 추적 전략은 `opencv_tracker/`보다 단순합니다.
 
 관련 파일:
-- `/home/runner/work/yoloTracker/yoloTracker/opencv_tracker_mosse/tracker_main.cpp`
-- `/home/runner/work/yoloTracker/yoloTracker/opencv_tracker_mosse/tracking_dot.cpp`
+- `opencv_tracker_mosse/tracker_main.cpp`
+- `opencv_tracker_mosse/tracking_dot.cpp`
 
 ### 3. 멀티 카메라 영상 수집/합성 기능 추가
 - 원본 Darknet의 단일 입력 흐름 외에, 네트워크로 들어오는 **여러 카메라 스트림을 수신**하도록 확장했습니다.
@@ -34,9 +34,9 @@ yoloTracker는 **Darknet(YOLO)** 을 기반으로, 이 저장소에서 추가한
 - `src/image_opencv.cpp`에서 `hconcat`, `vconcat`으로 다중 영상을 결합합니다.
 
 관련 파일:
-- `/home/runner/work/yoloTracker/yoloTracker/src/image_opencv.cpp`
-- `/home/runner/work/yoloTracker/yoloTracker/src/demo.c`
-- `/home/runner/work/yoloTracker/yoloTracker/include/darknet.h`
+- `src/image_opencv.cpp`
+- `src/demo.c`
+- `include/darknet.h`
 
 ### 4. OpenMP 기반 병렬 수신 코드 추가
 - 현재 코드베이스의 최근 변경점은 **OpenMP를 이용한 다중 스트림 병렬 수신**입니다.
@@ -44,8 +44,8 @@ yoloTracker는 **Darknet(YOLO)** 을 기반으로, 이 저장소에서 추가한
 - `open_video_stream_cus()`에서 여러 소켓의 JPEG 버퍼를 병렬로 받아 디코딩합니다.
 
 관련 파일:
-- `/home/runner/work/yoloTracker/yoloTracker/Makefile`
-- `/home/runner/work/yoloTracker/yoloTracker/src/image_opencv.cpp`
+- `Makefile`
+- `src/image_opencv.cpp`
 
 ### 5. 영상 스트리밍 도구 추가
 - `video_streaming/`에는 TCP 기반 영상 송수신 도구가 포함되어 있습니다.
@@ -53,9 +53,9 @@ yoloTracker는 **Darknet(YOLO)** 을 기반으로, 이 저장소에서 추가한
 - `videoclient`와 `videoclient_4cam`은 이를 수신해 표시하거나 다중 입력을 다룹니다.
 
 관련 파일:
-- `/home/runner/work/yoloTracker/yoloTracker/video_streaming/videoserver.cpp`
-- `/home/runner/work/yoloTracker/yoloTracker/video_streaming/videoclient.cpp`
-- `/home/runner/work/yoloTracker/yoloTracker/video_streaming/videoclient_4cam.cpp`
+- `video_streaming/videoserver.cpp`
+- `video_streaming/videoclient.cpp`
+- `video_streaming/videoclient_4cam.cpp`
 
 ### 6. ORB 실험 코드 및 보조 도구 추가
 - `ORB/`는 ORB 정합 실험용 코드입니다.
@@ -66,12 +66,12 @@ yoloTracker는 **Darknet(YOLO)** 을 기반으로, 이 저장소에서 추가한
 
 | 경로 | 역할 |
 | --- | --- |
-| `/home/runner/work/yoloTracker/yoloTracker/src/` | Darknet 본체 수정본. 다중 스트림 수신과 프레임 결합 포함 |
-| `/home/runner/work/yoloTracker/yoloTracker/opencv_tracker/` | ORB/MOSSE/예측을 조합한 메인 추적기 |
-| `/home/runner/work/yoloTracker/yoloTracker/opencv_tracker_mosse/` | MOSSE 중심 추적기 |
-| `/home/runner/work/yoloTracker/yoloTracker/video_streaming/` | 영상 송수신 유틸리티 |
-| `/home/runner/work/yoloTracker/yoloTracker/ORB/` | ORB 정합 실험 코드 |
-| `/home/runner/work/yoloTracker/yoloTracker/video_maker/` | 결과 영상 생성 도구 |
+| `src/` | Darknet 본체 수정본. 다중 스트림 수신과 프레임 결합 포함 |
+| `opencv_tracker/` | ORB/MOSSE/예측을 조합한 메인 추적기 |
+| `opencv_tracker_mosse/` | MOSSE 중심 추적기 |
+| `video_streaming/` | 영상 송수신 유틸리티 |
+| `ORB/` | ORB 정합 실험 코드 |
+| `video_maker/` | 결과 영상 생성 도구 |
 
 ## 동작 흐름
 
@@ -99,7 +99,7 @@ DEBUG=1
 빌드:
 
 ```bash
-cd /home/runner/work/yoloTracker/yoloTracker
+cd /path/to/yoloTracker
 make
 ```
 
@@ -111,35 +111,35 @@ make
 ### 2. 메인 추적기
 
 ```bash
-cd /home/runner/work/yoloTracker/yoloTracker/opencv_tracker
+cd opencv_tracker
 make tracker
 ```
 
 ### 3. MOSSE 추적기
 
 ```bash
-cd /home/runner/work/yoloTracker/yoloTracker/opencv_tracker_mosse
+cd opencv_tracker_mosse
 make tracker
 ```
 
 ### 4. 스트리밍 도구
 
 ```bash
-cd /home/runner/work/yoloTracker/yoloTracker/video_streaming
+cd video_streaming
 make
 ```
 
 ### 5. ORB 실험 도구
 
 ```bash
-cd /home/runner/work/yoloTracker/yoloTracker/ORB
+cd ORB
 make tracker
 ```
 
 ## 실행 전 확인할 설정 포인트
 
 ### `CAM_NUM`, `STREAM`
-- `/home/runner/work/yoloTracker/yoloTracker/include/darknet.h`
+- `include/darknet.h`
 - 현재 기본값은 다음과 같습니다.
 
 ```c
@@ -150,12 +150,12 @@ make tracker
 - 로컬 카메라를 직접 붙일지, 네트워크 스트림을 받을지에 따라 값을 조정해야 합니다.
 
 ### 스트리밍 대상 IP / 포트
-- `/home/runner/work/yoloTracker/yoloTracker/src/demo.c`
-- `/home/runner/work/yoloTracker/yoloTracker/src/image_opencv.cpp`
+- `src/demo.c`
+- `src/image_opencv.cpp`
 - 현재 카메라 서버 주소와 포트가 코드에 하드코딩되어 있습니다.
 
 ### 추적 결과 전송 서버
-- `/home/runner/work/yoloTracker/yoloTracker/opencv_tracker/tracker_main.cpp`
+- `opencv_tracker/tracker_main.cpp`
 - 외부 서버 주소가 코드에 고정되어 있어 실행 환경에 맞게 수정이 필요할 수 있습니다.
 
 ## 이 프로젝트에서 특히 봐야 할 커스텀 포인트
