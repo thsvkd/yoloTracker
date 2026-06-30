@@ -99,7 +99,7 @@ DEBUG=1
 빌드:
 
 ```bash
-cd /path/to/yoloTracker
+cd <path-to-repo>
 make
 ```
 
