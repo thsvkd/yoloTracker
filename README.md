@@ -1,92 +1,87 @@
 # yoloTracker
 
-yoloTracker는 **Darknet(YOLO)** 을 기반으로, 이 저장소에서 추가한 **객체 추적**·**멀티 카메라 스트리밍**·**병렬 수신 최적화**에 초점을 맞춘 프로젝트입니다.  
-원본 YOLO가 프레임 단위 검출 결과만 제공하는 반면, 이 프로젝트는 **객체별 ID를 유지하면서 연속 프레임을 추적**하는 기능을 추가합니다.
+> 🌐 [English version](README.en.md)
+
+Darknet(YOLO) 위에 객체 추적, 멀티 카메라 스트리밍, OpenMP 병렬 수신을 얹은 프로젝트입니다.
+원본 YOLO는 프레임마다 검출 결과를 내놓는 데서 끝나지만, 이 저장소는 검출된 객체에 ID를 붙여 연속 프레임에 걸쳐 추적합니다.
 
 ## 원본 Darknet/YOLO 대비 변경점
 
-### 1. 객체별 ID 유지가 가능한 추적 기능 추가
-- 검출된 박스를 다음 프레임에서도 같은 객체로 이어서 추적합니다.
-- `opencv_tracker/`는 다음 방법을 조합해 객체를 유지합니다.
-  - **MOSSE tracker**
-  - **ORB feature matching**
-  - **속도 기반 위치 예측**
-  - 일부 로직에서 **히스토리 기반 보정**
-- 결과적으로 단순 검출이 아니라 **“같은 사람/같은 물체를 계속 같은 ID로 관리”** 하는 흐름을 목표로 합니다.
+### 1. 객체 ID 추적
 
-관련 파일:
-- `opencv_tracker/tracker_main.cpp`
-- `opencv_tracker/tracking_dot.cpp`
-- `opencv_tracker/orb.cpp`
-- `opencv_tracker/tracker.h`
+검출된 박스를 이후 프레임에서도 같은 객체로 이어 추적합니다.
+`opencv_tracker/`는 다음 방법을 조합해 ID를 유지합니다.
 
-### 2. MOSSE 기반 경량 추적 버전 분리
-- `opencv_tracker_mosse/`는 보다 단순한 **MOSSE 중심 추적기**입니다.
-- 동일한 `out.txt`, `out.jpg` 기반으로 동작하지만, 추적 전략은 `opencv_tracker/`보다 단순합니다.
+- MOSSE tracker
+- ORB feature matching
+- 속도 기반 위치 예측
+- 히스토리 기반 보정
 
-관련 파일:
-- `opencv_tracker_mosse/tracker_main.cpp`
-- `opencv_tracker_mosse/tracking_dot.cpp`
+관련 파일: `opencv_tracker/tracker_main.cpp`, `tracking_dot.cpp`, `orb.cpp`, `tracker.h`
 
-### 3. 멀티 카메라 영상 수집/합성 기능 추가
-- 원본 Darknet의 단일 입력 흐름 외에, 네트워크로 들어오는 **여러 카메라 스트림을 수신**하도록 확장했습니다.
-- `STREAM` 값에 따라 1~4개 영상을 받아 하나의 프레임으로 합쳐 YOLO 입력으로 사용합니다.
-- `src/image_opencv.cpp`에서 `hconcat`, `vconcat`으로 다중 영상을 결합합니다.
+### 2. MOSSE 전용 경량 추적기
 
-관련 파일:
-- `src/image_opencv.cpp`
-- `src/demo.c`
-- `include/darknet.h`
+`opencv_tracker_mosse/`는 MOSSE만 사용하는 단순화된 버전입니다.
+`out.txt` / `out.jpg` 인터페이스는 동일하고, 추적 전략이 더 가볍습니다.
 
-### 4. OpenMP 기반 병렬 수신 코드 추가
-- 현재 코드베이스의 최근 변경점은 **OpenMP를 이용한 다중 스트림 병렬 수신**입니다.
-- 루트 `Makefile`에서 `OPENMP=1`을 켜고 `-fopenmp`를 추가합니다.
-- `open_video_stream_cus()`에서 여러 소켓의 JPEG 버퍼를 병렬로 받아 디코딩합니다.
+관련 파일: `opencv_tracker_mosse/tracker_main.cpp`, `tracking_dot.cpp`
 
-관련 파일:
-- `Makefile`
-- `src/image_opencv.cpp`
+### 3. 멀티 카메라 입력
 
-### 5. 영상 스트리밍 도구 추가
-- `video_streaming/`에는 TCP 기반 영상 송수신 도구가 포함되어 있습니다.
-- `videoserver`는 카메라 프레임을 JPEG로 인코딩해 전송합니다.
-- `videoclient`와 `videoclient_4cam`은 이를 수신해 표시하거나 다중 입력을 다룹니다.
+네트워크로 들어오는 1~4개 스트림을 `hconcat` / `vconcat`으로 합쳐 YOLO 입력으로 씁니다.
+`STREAM` 값으로 스트림 수를 지정합니다.
 
-관련 파일:
-- `video_streaming/videoserver.cpp`
-- `video_streaming/videoclient.cpp`
-- `video_streaming/videoclient_4cam.cpp`
+관련 파일: `src/image_opencv.cpp`, `src/demo.c`, `include/darknet.h`
 
-### 6. ORB 실험 코드 및 보조 도구 추가
-- `ORB/`는 ORB 정합 실험용 코드입니다.
-- `video_maker/`는 결과 영상을 만드는 보조 도구입니다.
-- `nano_cam_on.cpp`, `nano_cam_on.sh`는 원격 장비에서 스트리밍 서버를 띄우기 위한 환경 의존 스크립트입니다.
+### 4. OpenMP 병렬 수신
 
-## 저장소에서 추가된 주요 구성 요소
+`open_video_stream_cus()`에서 여러 소켓의 JPEG 버퍼를 병렬로 받아 디코딩합니다.
+루트 `Makefile`에서 `OPENMP=1`로 활성화합니다.
+
+관련 파일: `Makefile`, `src/image_opencv.cpp`
+
+### 5. 영상 스트리밍 도구
+
+TCP 기반 카메라 송수신 도구입니다.
+
+- `videoserver`: 카메라 프레임을 JPEG로 인코딩해 전송
+- `videoclient`: 단일 스트림 수신
+- `videoclient_4cam`: 4채널 수신
+
+관련 파일: `video_streaming/videoserver.cpp`, `videoclient.cpp`, `videoclient_4cam.cpp`
+
+### 6. 기타 보조 도구
+
+- `ORB/`: ORB 정합 실험용 코드
+- `video_maker/`: 결과 영상 생성 도구
+- `nano_cam_on.cpp`, `nano_cam_on.sh`: 원격 장비에서 스트리밍 서버를 띄우는 스크립트 (환경 의존)
+
+## 디렉터리 구조
 
 | 경로 | 역할 |
 | --- | --- |
-| `src/` | Darknet 본체 수정본. 다중 스트림 수신과 프레임 결합 포함 |
-| `opencv_tracker/` | ORB/MOSSE/예측을 조합한 메인 추적기 |
-| `opencv_tracker_mosse/` | MOSSE 중심 추적기 |
-| `video_streaming/` | 영상 송수신 유틸리티 |
+| `src/` | Darknet 수정본. 멀티 스트림 수신·프레임 합성 포함 |
+| `opencv_tracker/` | ORB/MOSSE/예측 조합 메인 추적기 |
+| `opencv_tracker_mosse/` | MOSSE 전용 경량 추적기 |
+| `video_streaming/` | 카메라 영상 송수신 유틸리티 |
 | `ORB/` | ORB 정합 실험 코드 |
 | `video_maker/` | 결과 영상 생성 도구 |
 
 ## 동작 흐름
 
-1. `video_streaming/videoserver`가 카메라 프레임을 네트워크로 전송합니다.
-2. Darknet 수정본이 여러 스트림을 받아 하나의 입력 프레임으로 합칩니다.
-3. YOLO 검출 결과를 `out.jpg`, `out.txt`로 저장합니다.
-4. `opencv_tracker/` 또는 `opencv_tracker_mosse/`가 이를 읽어 객체별 ID를 붙여 추적합니다.
-5. 추적 결과는 별도 서버로 전송하거나 화면에 시각화합니다.
+1. `videoserver`가 카메라 프레임을 네트워크로 전송
+2. Darknet 수정본이 여러 스트림을 받아 하나의 프레임으로 합성
+3. YOLO 검출 결과를 `out.jpg` / `out.txt`로 저장
+4. `opencv_tracker` 또는 `opencv_tracker_mosse`가 파일을 읽어 객체마다 ID를 붙여 추적
+5. 추적 결과를 외부 서버로 전송하거나 화면에 출력
 
-즉, 이 프로젝트의 핵심은 **YOLO 검출 → 파일 기반 전달 → 후처리 추적기에서 ID 부여 및 유지** 입니다.
+YOLO 검출 결과는 `out.txt` / `out.jpg` 파일을 통해 추적기에 전달됩니다.
 
 ## 빌드
 
-### 1. Darknet 본체
-루트 `Makefile` 기본 설정:
+### Darknet 본체
+
+기본 `Makefile` 설정:
 
 ```make
 GPU=1
@@ -96,103 +91,58 @@ OPENMP=1
 DEBUG=1
 ```
 
-빌드:
-
 ```bash
 make
 ```
 
-생성물:
-- `darknet`
-- `libdarknet.a`
-- `libdarknet.so`
+생성물: `darknet`, `libdarknet.a`, `libdarknet.so`
 
-### 2. 메인 추적기
+### 추적기 / 도구
 
 ```bash
-cd opencv_tracker
-make tracker
+cd opencv_tracker       && make tracker
+cd opencv_tracker_mosse && make tracker
+cd video_streaming      && make
+cd ORB                  && make tracker
 ```
 
-### 3. MOSSE 추적기
+## 실행 전 확인할 설정
 
-```bash
-cd opencv_tracker_mosse
-make tracker
-```
-
-### 4. 스트리밍 도구
-
-```bash
-cd video_streaming
-make
-```
-
-### 5. ORB 실험 도구
-
-```bash
-cd ORB
-make tracker
-```
-
-## 실행 전 확인할 설정 포인트
-
-### `CAM_NUM`, `STREAM`
-- `include/darknet.h`
-- 현재 기본값은 다음과 같습니다.
+### `CAM_NUM`, `STREAM` — `include/darknet.h`
 
 ```c
 #define CAM_NUM 0
 #define STREAM 4
 ```
 
-- 로컬 카메라를 직접 붙일지, 네트워크 스트림을 받을지에 따라 값을 조정해야 합니다.
+로컬 카메라를 쓸 경우 `CAM_NUM`을, 네트워크 스트림을 받을 경우 `STREAM`을 조정합니다.
 
-### 스트리밍 대상 IP / 포트
-- `src/demo.c`
-- `src/image_opencv.cpp`
-- 현재 카메라 서버 주소와 포트가 코드에 하드코딩되어 있습니다.
+### 스트리밍 IP / 포트 — `src/demo.c`, `src/image_opencv.cpp`
 
-### 추적 결과 전송 서버
-- `opencv_tracker/tracker_main.cpp`
-- 외부 서버 주소가 코드에 고정되어 있어 실행 환경에 맞게 수정이 필요할 수 있습니다.
+카메라 서버 주소와 포트가 하드코딩되어 있습니다. 환경에 맞게 수정해야 합니다.
 
-## 이 프로젝트에서 특히 봐야 할 커스텀 포인트
+### 추적 결과 전송 서버 — `opencv_tracker/tracker_main.cpp`
+
+외부 서버 주소가 하드코딩되어 있습니다.
+
+## 주요 커스텀 포인트
 
 ### `src/image_opencv.cpp`
-- OpenCV 기반 입출력 처리
-- 멀티 스트림 수신
-- 수신 영상 합성
-- OpenMP 병렬 수신 로직
+
+OpenCV 입출력, 멀티 스트림 수신·합성, OpenMP 병렬 수신 로직이 모여 있습니다.
 
 ### `src/demo.c`
-- YOLO demo 루프에서 커스텀 입력 소스 연결
-- 소켓 초기화
-- `out.jpg`, `out.txt` 저장 흐름과 연동
+
+YOLO demo 루프에서 커스텀 입력 소스를 연결하고, 소켓을 초기화하며 `out.jpg` / `out.txt`를 씁니다.
 
 ### `opencv_tracker/`
-- YOLO 결과를 실제 추적 결과로 바꾸는 핵심 로직
-- 객체별 tag, miss count, 이동 예측, 화면 이탈 처리 포함
 
-### `video_streaming/`
-- 카메라 영상을 네트워크로 송수신하기 위한 별도 유틸리티
+YOLO 결과를 받아 객체별 tag와 miss count를 관리하고, 이동 예측과 화면 이탈 처리를 수행합니다.
 
-## 제한 사항 / 주의 사항
+## 주의 사항
 
-- 여러 IP, 포트, 서버 주소가 코드에 **하드코딩**되어 있습니다.
-- 원격 카메라 실행 보조 스크립트는 **특정 개발 환경에 강하게 의존**합니다.
-- YOLO와 추적기 사이가 직접 API 호출이 아니라 **`out.txt`, `out.jpg` 파일 기반**으로 연결됩니다.
-- `DEBUG=1`이 기본이라 성능보다 디버깅 편의에 맞춰져 있습니다.
-- OpenMP 최적화는 현재 **다중 스트림 수신 경로**에 집중되어 있습니다.
-
-## 정리
-
-이 저장소는 단순히 Darknet을 가져온 것이 아니라, 다음 기능을 덧붙인 **YOLO 기반 추적 시스템**입니다.
-
-- 다중 객체 추적
-- 객체 ID 유지
-- 멀티 카메라 입력 처리
-- 네트워크 영상 스트리밍
-- OpenMP 기반 병렬 수신 최적화
-
-따라서 이 프로젝트를 이해할 때는 원본 YOLO 사용법보다, **이 저장소에서 추가한 입력 파이프라인과 추적 파이프라인**을 중심으로 보는 것이 중요합니다.
+- IP, 포트, 서버 주소가 코드에 하드코딩되어 있습니다.
+- 원격 카메라 스크립트는 특정 개발 환경에 종속됩니다.
+- YOLO와 추적기 사이는 API가 아니라 파일(`out.txt`, `out.jpg`)로 연결됩니다.
+- `DEBUG=1`이 기본값이므로 성능보다 디버깅 편의를 우선합니다.
+- OpenMP 최적화는 다중 스트림 수신 경로에만 적용되어 있습니다.
