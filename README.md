@@ -99,7 +99,6 @@ DEBUG=1
 빌드:
 
 ```bash
-cd <path-to-repo>
 make
 ```
 
